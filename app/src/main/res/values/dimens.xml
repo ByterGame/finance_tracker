@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="circle_size">20dp</dimen>
+    <dimen name="circle_margin">15dp</dimen>
+    <dimen name="keypad_margin">8dp</dimen>
+    <dimen name="text_size_large">24sp</dimen>
+</resources>
