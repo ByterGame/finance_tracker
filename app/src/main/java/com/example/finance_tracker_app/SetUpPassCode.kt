@@ -1,53 +1,33 @@
 package com.example.finance_tracker_app
 
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.widget.Toast
-import android.graphics.drawable.GradientDrawable
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.example.finance_tracker_app.databinding.SetUpPinCodeLayoutBinding
+import android.security.keystore.KeyGenParameterSpec
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import com.example.finance_tracker_app.databinding.EnterPinCodeLayoutBinding
+import android.security.keystore.KeyProperties
+import java.io.IOException
+import java.security.GeneralSecurityException
+import androidx.core.content.edit
+import android.content.Intent
 
-class EnterPassCode : AppCompatActivity() {
 
-    private lateinit var binding: EnterPinCodeLayoutBinding
+class SetUpPassCode: AppCompatActivity() {
+
+    private lateinit var binding: SetUpPinCodeLayoutBinding
     private val enteredPassword = StringBuilder()
-    private var correctPassword: String = "0000"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        correctPassword = loadPassword() ?: "0000"
-        binding = EnterPinCodeLayoutBinding.inflate(layoutInflater)
+        binding = SetUpPinCodeLayoutBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        updateCircles()
+
         setupNumberButtons()
         setupDeleteButton()
-        setupForgotCodeButton()
-    }
-
-    private fun loadPassword(): String? {
-        return try {
-            val masterKey = MasterKey.Builder(applicationContext)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                .build()
-
-            val sharedPreferences = EncryptedSharedPreferences.create(
-                applicationContext,
-                "secure_prefs",
-                masterKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            )
-
-            sharedPreferences.getString("app_pin_code", null)
-                ?: getSharedPreferences("app_prefs", MODE_PRIVATE)
-                    .getString("pin_code", null)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            getSharedPreferences("app_prefs", MODE_PRIVATE)
-                .getString("pin_code", null)
-        }
     }
 
     private fun setupNumberButtons() {
@@ -97,12 +77,6 @@ class EnterPassCode : AppCompatActivity() {
         }
     }
 
-    private fun setupForgotCodeButton() {
-        binding.forgotCode.setOnClickListener {
-            Toast.makeText(this, "Forgot code clicked", Toast.LENGTH_SHORT).show()
-        }
-    }
-
     private fun updateCircles() {
         listOf(binding.circle1, binding.circle2, binding.circle3, binding.circle4).forEachIndexed { index, circle ->
             (circle.background as? GradientDrawable)?.setColor(
@@ -115,12 +89,50 @@ class EnterPassCode : AppCompatActivity() {
     }
 
     private fun checkPassword() {
-        if (enteredPassword.toString() == correctPassword) {
-            Toast.makeText(this, "Success! Password correct", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(this, "Wrong password. Try again", Toast.LENGTH_SHORT).show()
-            enteredPassword.clear()
-            updateCircles()
+        if (enteredPassword.length == 4) {
+            savePassword(enteredPassword.toString())
+            Toast.makeText(this, "PIN code set successfully", Toast.LENGTH_SHORT).show()
+            navigateToEnterPassCode()
         }
+    }
+
+    private fun savePassword(password: String) {
+        try {
+            val masterKey = MasterKey.Builder(applicationContext)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+
+            val sharedPreferences = EncryptedSharedPreferences.create(
+                applicationContext,
+                "secure_prefs",
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+
+            with(sharedPreferences.edit()) {
+                putString("app_pin_code", password)
+                apply()
+            }
+        } catch (e: GeneralSecurityException) {
+            e.printStackTrace()
+            // Fallback to regular SharedPreferences if encryption fails
+            savePasswordWithRegularPrefs(password)
+        } catch (e: IOException) {
+            e.printStackTrace()
+            savePasswordWithRegularPrefs(password)
+        }
+    }
+
+    private fun savePasswordWithRegularPrefs(password: String) {
+        getSharedPreferences("app_prefs", MODE_PRIVATE)
+            .edit() {
+                putString("pin_code", password)
+            }
+    }
+
+    private fun navigateToEnterPassCode() {
+        startActivity(Intent(this, EnterPassCode::class.java))
+        finish() // Закрываем текущую активити, чтобы нельзя было вернуться назад
     }
 }

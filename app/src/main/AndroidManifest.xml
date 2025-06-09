@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.finance_tracker_app">
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -11,18 +12,35 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Finance_tracker_app"
-        tools:targetApi="31">
+        tools:targetApi="31"
+        android:networkSecurityConfig="@xml/network_security_config">
 
         <activity
-            android:name=".EnterPassCode"
-            android:exported="true"
-            android:label="Enter Passcode"
-            android:theme="@style/Theme.Finance_tracker_app">
+            android:name=".MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".SetUpPassCode"
+            android:exported="false"
+            android:label="Set Up Passcode"
+            android:theme="@style/Theme.Finance_tracker_app" />
+
+        <activity
+            android:name=".EnterPassCode"
+            android:exported="false"
+            android:label="Enter Passcode"
+            android:theme="@style/Theme.Finance_tracker_app" />
+
+        <activity
+            android:name=".Registration"
+            android:exported="false"
+            android:label="Registration"
+            android:theme="@style/Theme.Finance_tracker_app" />
     </application>
 
 </manifest>
