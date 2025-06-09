@@ -60,6 +60,7 @@
             app:boxStrokeWidthFocused="3dp">
 
             <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/name_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="text"
@@ -68,6 +69,7 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/email_input_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
@@ -84,12 +86,12 @@
                 android:id="@+id/email_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text"
+                android:inputType="textEmailAddress"
                 android:fontFamily="@font/lexend_deca"
                 android:textColor="@color/primary_color"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <ImageButton
+        <Button
             android:id="@+id/send_code_button"
             android:layout_height="40dp"
             android:layout_width="180dp"
@@ -98,7 +100,10 @@
             android:layout_marginEnd="15dp"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="20dp"
-            android:background="@drawable/dashboard_card_background_mini"/>
+            android:text="Send code"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/primary_light"
+            android:fontFamily="@font/lexend_deca" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -117,12 +122,12 @@
                 android:id="@+id/enter_code_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text"
+                android:inputType="number"
                 android:fontFamily="@font/lexend_deca"
                 android:textColor="@color/primary_color"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <ImageButton
+        <Button
             android:id="@+id/check_correctly_code_button"
             android:layout_height="40dp"
             android:layout_width="180dp"
@@ -131,7 +136,10 @@
             android:layout_marginEnd="15dp"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="20dp"
-            android:background="@drawable/dashboard_card_background_mini"/>
+            android:text="Check code"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/primary_light"
+            android:fontFamily="@font/lexend_deca" />
 
     </LinearLayout>
 

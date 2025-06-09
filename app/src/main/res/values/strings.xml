@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">finance_tracker_app</string>
+    <string name="title_activity_dashboard">DashboardActivity</string>
 </resources>

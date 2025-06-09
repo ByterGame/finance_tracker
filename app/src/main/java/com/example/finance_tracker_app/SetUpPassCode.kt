@@ -92,7 +92,7 @@ class SetUpPassCode: AppCompatActivity() {
         if (enteredPassword.length == 4) {
             savePassword(enteredPassword.toString())
             Toast.makeText(this, "PIN code set successfully", Toast.LENGTH_SHORT).show()
-            navigateToEnterPassCode()
+            navigateToDashboard()
         }
     }
 
@@ -116,7 +116,6 @@ class SetUpPassCode: AppCompatActivity() {
             }
         } catch (e: GeneralSecurityException) {
             e.printStackTrace()
-            // Fallback to regular SharedPreferences if encryption fails
             savePasswordWithRegularPrefs(password)
         } catch (e: IOException) {
             e.printStackTrace()
@@ -131,8 +130,8 @@ class SetUpPassCode: AppCompatActivity() {
             }
     }
 
-    private fun navigateToEnterPassCode() {
-        startActivity(Intent(this, EnterPassCode::class.java))
-        finish() // Закрываем текущую активити, чтобы нельзя было вернуться назад
+    private fun navigateToDashboard() {
+        startActivity(Intent(this, DashboardActivity::class.java))
+        finish()
     }
 }

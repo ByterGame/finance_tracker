@@ -1,5 +1,6 @@
 package com.example.finance_tracker_app
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import android.graphics.drawable.GradientDrawable
@@ -117,6 +118,8 @@ class EnterPassCode : AppCompatActivity() {
     private fun checkPassword() {
         if (enteredPassword.toString() == correctPassword) {
             Toast.makeText(this, "Success! Password correct", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this@EnterPassCode, DashboardActivity::class.java))
+            finish()
         } else {
             Toast.makeText(this, "Wrong password. Try again", Toast.LENGTH_SHORT).show()
             enteredPassword.clear()
