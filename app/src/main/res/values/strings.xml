@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">finance_tracker_app</string>
     <string name="title_activity_dashboard">DashboardActivity</string>
+    <string name="registration_warning">You can skip registration and start using the app in guest mode. However, creating an account allows you to back up your data and access it from any device.You can skip registration and start using the app in guest mode. However, creating an account allows you to back up your data and access it from any device.</string>
+    <string name="title_activity_create_card">CreateCardActivity</string>
 </resources>

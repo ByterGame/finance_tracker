@@ -1,12 +1,15 @@
 package com.example.finance_tracker_app
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.widget.Button
 import android.widget.Toast
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Patterns
+import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -28,6 +31,7 @@ class Registration : AppCompatActivity() {
     private lateinit var nameField: TextInputEditText
 
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.registration_layout)
@@ -38,7 +42,6 @@ class Registration : AppCompatActivity() {
         codeField = findViewById(R.id.enter_code_input)
         emailLayout = findViewById(R.id.email_input_layout)
         nameField = findViewById(R.id.name_input)
-
 
         sendButton.isEnabled = false
         sendButton.setBackgroundTintList(getColorStateList(R.color.primary_light))
@@ -91,6 +94,8 @@ class Registration : AppCompatActivity() {
                 verifyButton.setBackgroundTintList(getColorStateList(R.color.primary_light))
                 return@setOnClickListener
             }
+            emailField.isEnabled = false
+            codeField.requestFocus()
             sendButton.isEnabled = false
             sendButton.setBackgroundTintList(getColorStateList(R.color.primary_light))
             sendButton.text = "Sending..."
@@ -99,7 +104,6 @@ class Registration : AppCompatActivity() {
                 override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                     if (response.isSuccessful) {
                         Toast.makeText(this@Registration, "Код отправлен!", Toast.LENGTH_SHORT).show()
-                        emailField.isEnabled = false
                         sendButton.text = "Change email"
                         sendButton.isEnabled = true
                         verifyButton.isEnabled = true
@@ -108,12 +112,14 @@ class Registration : AppCompatActivity() {
                         Toast.makeText(this@Registration, "Ошибка отправки кода", Toast.LENGTH_SHORT).show()
                         sendButton.isEnabled = true
                         sendButton.text = "Send code"
+                        emailField.isEnabled = true
                     }
                 }
 
                 override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                     Toast.makeText(this@Registration, "Ошибка: ${t.message}", Toast.LENGTH_SHORT).show()
                     sendButton.isEnabled = true
+                    emailField.isEnabled = true
                     sendButton.text = "Send code"
                 }
             })
@@ -147,6 +153,12 @@ class Registration : AppCompatActivity() {
                     Toast.makeText(this@Registration, "Ошибка: ${t.message}", Toast.LENGTH_SHORT).show()
                 }
             })
+        }
+
+        val skip_registration_button = findViewById<TextView>(R.id.skip_registration)
+        skip_registration_button.setOnClickListener {
+            startActivity(Intent(this@Registration, SetUpPassCode::class.java))
+            finish()
         }
     }
 

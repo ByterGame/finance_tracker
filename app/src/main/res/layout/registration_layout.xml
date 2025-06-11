@@ -21,7 +21,7 @@
         android:layout_height="wrap_content"
         android:src="@drawable/background_piece_2"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toRightOf="parent" />
+        app:layout_constraintRight_toRightOf="parent"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -41,7 +41,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_bias="0.55"
+        app:layout_constraintVertical_bias="0.65"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         android:orientation="vertical"
@@ -51,7 +51,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="10dp"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:hint="Name"
             app:hintTextColor="@color/primary_color"
@@ -74,7 +74,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="10dp"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:hint="Email"
             app:hintTextColor="@color/primary_color"
@@ -99,7 +99,7 @@
             android:layout_marginStart="15dp"
             android:layout_marginEnd="15dp"
             android:layout_marginTop="10dp"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="10dp"
             android:text="Send code"
             android:textColor="@android:color/white"
             android:backgroundTint="@color/primary_light"
@@ -110,7 +110,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="10dp"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:hint="Enter code"
             app:hintTextColor="@color/primary_color"
@@ -135,11 +135,53 @@
             android:layout_marginStart="15dp"
             android:layout_marginEnd="15dp"
             android:layout_marginTop="10dp"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="10dp"
             android:text="Check code"
             android:textColor="@android:color/white"
             android:backgroundTint="@color/primary_light"
             android:fontFamily="@font/lexend_deca" />
+
+        <TextView
+            android:id="@+id/skip_registration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Skip registration?"
+            android:textColor="@color/primary_color"
+            android:fontFamily="@font/lexend_deca"
+            android:textSize="12sp"
+            android:clickable="true"
+            android:focusable="true" />
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/registration_warning"
+            android:textColor="@color/black"
+            android:fontFamily="@font/lexend_deca"
+            android:textSize="10sp"
+            android:clickable="true"
+            android:focusable="true"
+            android:textAlignment="center"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Finance Tracker"
+            android:textColor="@color/primary_color"
+            android:fontFamily="@font/lexend_deca"
+            android:layout_marginTop="20dp"
+            android:textSize="32sp"
+            android:clickable="true"
+            android:focusable="true"
+            android:textAlignment="center"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"/>
 
     </LinearLayout>
 
