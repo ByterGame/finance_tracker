@@ -48,13 +48,19 @@ class DashboardActivity : AppCompatActivity() {
 
         val totalValue = findViewById<TextView>(R.id.total_value)
         val anyCardContainer = findViewById<FrameLayout>(R.id.any_card)
+        val allCards = findViewById<FrameLayout>(R.id.all_cards_button)
         anyCardContainer.removeAllViews()
+        allCards.setOnClickListener {
+            startActivity(Intent(this@DashboardActivity, AllCardsActivity::class.java))
+            finish()
+        }
 
         val cards = loadCards()
         val total = cards.sumOf { it.balance }
         totalValue.text = String.format("%,.0f $", total)
 
         if (cards.isEmpty()) {
+            allCards.isEnabled = false
             val textView = TextView(this).apply {
                 text = "+ Add your first card"
                 textSize = 21f
@@ -71,6 +77,7 @@ class DashboardActivity : AppCompatActivity() {
                 FrameLayout.LayoutParams.MATCH_PARENT
             ))
         } else {
+            allCards.isEnabled = true
             val card = cards[0]
 
             val cardView = layoutInflater.inflate(R.layout.card_item, anyCardContainer, false)
