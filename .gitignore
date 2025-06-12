@@ -3,6 +3,7 @@
 /local.properties
 .idea
 .venv
+.env
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml
