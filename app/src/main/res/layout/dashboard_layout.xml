@@ -130,32 +130,89 @@
         android:background="@color/primary_color"
         app:layout_constraintBottom_toBottomOf="parent"
         android:orientation="horizontal">
-        <View
+        <LinearLayout
+            android:id="@+id/dashboard_section"
             android:layout_height="match_parent"
             android:layout_width="0dp"
             android:layout_weight="1"
-            />
+            android:focusable="true"
+            android:orientation="vertical"
+            android:clickable="true"
+            >
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="35dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/dashboard_icon"
+                android:layout_gravity="center_horizontal"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="dashboard"
+                android:layout_gravity="center_horizontal"
+                android:fontFamily="@font/lexend_deca"
+                android:textColor="@color/theme_color"
+                android:textSize="16sp"/>
+        </LinearLayout>
         <View
             android:layout_height="match_parent"
             android:layout_width="0dp"
             android:layout_weight="0.03"
             android:background="@color/primary_light"
             />
-        <View
+        <LinearLayout
+            android:id="@+id/add_operation_section"
             android:layout_height="match_parent"
             android:layout_width="0dp"
             android:layout_weight="1"
-            />
+            android:focusable="true"
+            android:orientation="vertical"
+            android:clickable="true"
+            >
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="35dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/plus"
+                android:layout_gravity="center_horizontal"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="add operation"
+                android:layout_gravity="center_horizontal"
+                android:fontFamily="@font/lexend_deca"
+                android:textColor="@color/theme_color"
+                android:textSize="16sp"/>
+        </LinearLayout>
         <View
             android:layout_height="match_parent"
             android:layout_width="0dp"
             android:layout_weight="0.03"
             android:background="@color/primary_light"
             />
-        <View
+        <LinearLayout
+            android:id="@+id/settings_section"
             android:layout_height="match_parent"
             android:layout_width="0dp"
             android:layout_weight="1"
-            />
+            android:focusable="true"
+            android:orientation="vertical"
+            android:clickable="true"
+            >
+            <ImageView
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/settings_icon"
+                android:layout_gravity="center_horizontal"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="options"
+                android:layout_gravity="center_horizontal"
+                android:fontFamily="@font/lexend_deca"
+                android:textColor="@color/theme_color"
+                android:textSize="16sp"/>
+        </LinearLayout>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

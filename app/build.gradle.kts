@@ -65,4 +65,5 @@ dependencies {
     implementation(libs.coroutines.core)
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
+    implementation(libs.colorpicker)
 }

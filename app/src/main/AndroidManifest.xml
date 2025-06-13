@@ -17,6 +17,11 @@
         android:theme="@style/Theme.Finance_tracker_app"
         tools:targetApi="31">
         <activity
+            android:name=".AddCategoryActivity"
+            android:exported="false"
+            android:label="@string/title_activity_add_category"
+            android:theme="@style/Theme.Finance_tracker_app" />
+        <activity
             android:name=".AllCardsActivity"
             android:exported="false"
             android:label="@string/title_activity_all_cards"

@@ -54,6 +54,11 @@ class DashboardActivity : AppCompatActivity() {
             startActivity(Intent(this@DashboardActivity, AllCardsActivity::class.java))
             finish()
         }
+        val addCategoryButton = findViewById<LinearLayout>(R.id.add_operation_section)
+        addCategoryButton.setOnClickListener {
+            startActivity(Intent(this@DashboardActivity, AddCategoryActivity::class.java))
+            finish()
+        }
 
         val cards = loadCards()
         val total = cards.sumOf { it.balance }
