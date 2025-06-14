@@ -56,7 +56,7 @@ class DashboardActivity : AppCompatActivity() {
         }
         val addCategoryButton = findViewById<LinearLayout>(R.id.add_operation_section)
         addCategoryButton.setOnClickListener {
-            startActivity(Intent(this@DashboardActivity, AddCategoryActivity::class.java))
+            startActivity(Intent(this@DashboardActivity, AddOperationActivity::class.java))
             finish()
         }
 

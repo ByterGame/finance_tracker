@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <ImageView
+        android:id="@+id/image1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/background_piece_1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="-170dp"
+        android:layout_marginTop="85dp"
+        android:rotation="-8"/>
+
+    <ImageView
+        android:id="@+id/image2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/background_piece_1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginStart="-140dp"
+        android:layout_marginTop="300dp"
+        android:rotation="-40"/>
+
+    <ImageView
+        android:id="@+id/image3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/background_piece_2"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@color/primary_color"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/back_arrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/back_arrow"
+            android:layout_gravity="center"
+            android:layout_marginStart="30dp"
+            android:layout_marginTop="3dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Add operation window"
+            android:textColor="@color/theme_color"
+            android:textSize="24sp"
+            android:fontFamily="@font/lexend_deca"
+            android:layout_marginStart="50dp"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/header"
+        android:orientation="vertical"
+        android:layout_marginTop="40dp"
+        >
+
+        <Spinner
+            android:id="@+id/transaction_type_spinner"
+            android:layout_width="330dp"
+            android:layout_height="45dp"
+            android:background="@drawable/spinner_background"
+            android:popupBackground="@drawable/spinner_background"
+            android:gravity="center"
+            android:layout_gravity="center"/>
+
+        <LinearLayout
+            android:layout_width="330dp"
+            android:layout_height="50dp"
+            android:background="@drawable/edittext_background"
+            android:backgroundTint="@color/primary_color"
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"
+                android:text="Transaction amount:"
+                android:fontFamily="@font/lexend_deca"
+                android:textColor="@color/theme_color"
+                android:gravity="center_vertical"
+                android:textSize="14sp"/>
+
+            <EditText
+                android:id="@+id/transaction_amount"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"
+                android:background="@drawable/edittext_background"
+                android:inputType="numberDecimal"
+                android:hint="0"
+                android:textColor="@color/theme_color"
+                android:textColorHint="@color/theme_color"
+                android:fontFamily="@font/lexend_deca"
+                android:gravity="center_vertical|end"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="0.1"
+                android:layout_height="match_parent"
+                android:text="$"
+                android:fontFamily="@font/lexend_deca"
+                android:textColor="@color/theme_color"
+                android:textSize="20sp"/>
+
+        </LinearLayout>
+
+        <Spinner
+            android:id="@+id/select_account_spinner"
+            android:layout_width="330dp"
+            android:layout_height="45dp"
+            android:background="@drawable/spinner_background"
+            android:popupBackground="@drawable/spinner_background"
+            android:gravity="center"
+            android:layout_marginTop="20dp"
+            android:layout_gravity="center"/>
+
+        <Spinner
+            android:id="@+id/select_category_spinner"
+            android:layout_width="330dp"
+            android:layout_height="45dp"
+            android:background="@drawable/spinner_background"
+            android:popupBackground="@drawable/spinner_background"
+            android:gravity="center"
+            android:layout_marginTop="20dp"
+            android:layout_gravity="center"/>
+
+        <EditText
+            android:id="@+id/date_input"
+            android:layout_width="330dp"
+            android:layout_height="45dp"
+            android:hint="Select date"
+            android:focusable="false"
+            android:clickable="true"
+            android:background="@drawable/edittext_background"
+            android:textColor="@color/theme_color"
+            android:textColorHint="@color/theme_color"
+            android:fontFamily="@font/lexend_deca"
+            android:gravity="center"
+            android:textSize="16sp"
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Note (optional field):"
+            android:layout_marginStart="42dp"
+            android:layout_marginTop="20dp"
+            android:fontFamily="@font/lexend_deca"
+            android:textColor="@color/primary_color"
+            android:textSize="16sp"/>
+
+        <EditText
+            android:id="@+id/note_input"
+            android:layout_width="330dp"
+            android:layout_height="100dp"
+            android:background="@drawable/edittext_background"
+            android:hint="Enter text..."
+            android:textColor="@color/theme_color"
+            android:textColorHint="@color/theme_color"
+            android:fontFamily="@font/lexend_deca"
+            android:padding="12dp"
+            android:textSize="16sp"
+            android:layout_marginTop="10dp"
+            android:layout_gravity="center"
+            android:gravity="start"/>
+
+        <Button
+            android:id="@+id/add_operation"
+            android:layout_width="250dp"
+            android:layout_height="45dp"
+            android:background="@drawable/spinner_background"
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp"
+            android:text="Add bank account"
+            android:textAllCaps="false"
+            android:fontFamily="@font/lexend_deca"
+            android:textSize="16sp"/>
+
+    </LinearLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
