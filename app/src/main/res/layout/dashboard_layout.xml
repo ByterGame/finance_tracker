@@ -90,7 +90,12 @@
         app:layout_constraintBottom_toTopOf="@id/navigation_and_graph_parameters"
         app:layout_constraintTop_toBottomOf="@id/cards_and_amount"
         >
-
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/line_chart"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -100,23 +105,50 @@
         app:layout_constraintBottom_toTopOf="@+id/toolbar"
         android:background="@color/primary_light">
 
-        <View
-            android:id="@+id/graphs_time"
+        <LinearLayout
             android:layout_width="150dp"
-            android:layout_height="40dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginStart="30dp"
-            android:background="@drawable/dashboard_card_background_mini" />
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_marginStart="15dp"
+            app:layout_constraintStart_toStartOf="parent">
 
-        <View
-            android:id="@+id/graphs_type"
-            android:layout_width="150dp"
-            android:layout_height="40dp"
+            <EditText
+                android:id="@+id/start_data_graph"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="7dp"
+                android:hint="Start date"
+                android:gravity="center"
+                android:textColor="@color/theme_color"
+                android:textColorHint="@color/theme_color"
+                android:fontFamily="@font/lexend_deca"
+                android:focusable="false"
+                android:background="@drawable/dashboard_card_background_mini" />
+
+            <EditText
+                android:id="@+id/end_data_graph"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginBottom="10dp"
+                android:focusable="false"
+                android:hint="End date"
+                android:gravity="center"
+                android:textColor="@color/theme_color"
+                android:textColorHint="@color/theme_color"
+                android:fontFamily="@font/lexend_deca"
+                android:background="@drawable/dashboard_card_background_mini"/>
+        </LinearLayout>
+
+
+        <Spinner
+            android:id="@+id/graph_type"
+            android:layout_width="200dp"
+            android:layout_height="60dp"
             android:layout_gravity="center"
-            android:layout_marginEnd="30dp"
-            android:background="@drawable/dashboard_card_background_mini"
+            android:layout_marginEnd="15dp"
+            android:background="@drawable/spinner_background"
+            android:popupBackground="@drawable/spinner_background"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

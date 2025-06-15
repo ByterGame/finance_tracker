@@ -17,8 +17,10 @@ retrofit = "2.9.0"
 gson = "2.9.0"
 colorpicker = "1.1.0"
 roomKtx = "2.7.0"
+mpandroidchart = "3.1.0"
 
 [libraries]
+mpandroidchart = { group = "com.github.PhilJay", name = "MPAndroidChart", version.ref = "mpandroidchart" }
 androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
