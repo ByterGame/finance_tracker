@@ -12,6 +12,9 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import androidx.appcompat.app.AppCompatDelegate
+import android.content.Context
+
 
 class AllCardsActivity : AppCompatActivity() {
 
@@ -37,6 +40,10 @@ class AllCardsActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val isDark = prefs.getBoolean("dark_theme", false)
+        val mode = if (isDark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+        AppCompatDelegate.setDefaultNightMode(mode)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.all_cards)
 

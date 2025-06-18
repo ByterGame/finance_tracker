@@ -32,6 +32,8 @@ import com.github.mikephil.charting.components.MarkerView
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.utils.MPPointF
+import androidx.appcompat.app.AppCompatDelegate
+
 
 
 class DashboardActivity : AppCompatActivity() {
@@ -56,6 +58,10 @@ class DashboardActivity : AppCompatActivity() {
     private val KEY_GRAPH_TYPE_POS = "graph_type_position"
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val isDark = prefs.getBoolean("dark_theme", false)
+        val mode = if (isDark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+        AppCompatDelegate.setDefaultNightMode(mode)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.dashboard_layout)
 
@@ -72,10 +78,10 @@ class DashboardActivity : AppCompatActivity() {
         defaultCal.set(2025, Calendar.JUNE, 1, 23, 59, 59)
         val defaultEndDate = defaultCal.timeInMillis
 
-        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        startDateMillis = prefs.getLong(KEY_START_DATE, defaultStartDate)
-        endDateMillis = prefs.getLong(KEY_END_DATE, defaultEndDate)
-        val savedGraphPos = prefs.getInt(KEY_GRAPH_TYPE_POS, 4)
+        val prefs_dash = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        startDateMillis = prefs_dash.getLong(KEY_START_DATE, defaultStartDate)
+        endDateMillis = prefs_dash.getLong(KEY_END_DATE, defaultEndDate)
+        val savedGraphPos = prefs_dash.getInt(KEY_GRAPH_TYPE_POS, 4)
 
         val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
         startDateInput.setText(sdf.format(Date(startDateMillis)))
@@ -94,6 +100,15 @@ class DashboardActivity : AppCompatActivity() {
             }
         }
         initCardsUI()
+        setupSettingsButton()
+    }
+
+    private fun setupSettingsButton() {
+        val settingsBtn = findViewById<LinearLayout>(R.id.settings_section)
+        settingsBtn.setOnClickListener {
+            startActivity(Intent(this@DashboardActivity, SettingsActivity::class.java))
+            finish()
+        }
     }
 
     private fun initChartConfig() {

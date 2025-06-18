@@ -14,6 +14,9 @@ import java.io.IOException
 import java.security.GeneralSecurityException
 import androidx.core.content.edit
 import android.content.Intent
+import androidx.appcompat.app.AppCompatDelegate
+import android.content.Context
+
 
 
 class SetUpPassCode: AppCompatActivity() {
@@ -22,6 +25,10 @@ class SetUpPassCode: AppCompatActivity() {
     private val enteredPassword = StringBuilder()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val isDark = prefs.getBoolean("dark_theme", false)
+        val mode = if (isDark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+        AppCompatDelegate.setDefaultNightMode(mode)
         super.onCreate(savedInstanceState)
         binding = SetUpPinCodeLayoutBinding.inflate(layoutInflater)
         setContentView(binding.root)

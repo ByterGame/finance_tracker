@@ -13,6 +13,9 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.jaredrummler.android.colorpicker.ColorPickerDialog
 import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
+import androidx.appcompat.app.AppCompatDelegate
+import android.content.Context
+
 
 class AddCategoryActivity : AppCompatActivity(), ColorPickerDialogListener {
 
@@ -22,6 +25,10 @@ class AddCategoryActivity : AppCompatActivity(), ColorPickerDialogListener {
     private lateinit var colorPreview: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val isDark = prefs.getBoolean("dark_theme", false)
+        val mode = if (isDark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+        AppCompatDelegate.setDefaultNightMode(mode)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.add_category_layout)
 

@@ -10,4 +10,8 @@
         <item name="android:focusable">true</item>
     </style>
 
+    <style name="ThemedButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:background">@drawable/spinner_background</item>
+        <item name="android:textColor">@color/theme_color</item>
+    </style>
 </resources>

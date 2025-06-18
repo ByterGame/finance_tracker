@@ -9,6 +9,9 @@ import androidx.core.content.ContextCompat
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.example.finance_tracker_app.databinding.EnterPinCodeLayoutBinding
+import androidx.appcompat.app.AppCompatDelegate
+import android.content.Context
+
 
 class EnterPassCode : AppCompatActivity() {
 
@@ -17,6 +20,10 @@ class EnterPassCode : AppCompatActivity() {
     private var correctPassword: String = "0000"
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val isDark = prefs.getBoolean("dark_theme", false)
+        val mode = if (isDark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+        AppCompatDelegate.setDefaultNightMode(mode)
         super.onCreate(savedInstanceState)
         correctPassword = loadPassword() ?: "0000"
         binding = EnterPinCodeLayoutBinding.inflate(layoutInflater)

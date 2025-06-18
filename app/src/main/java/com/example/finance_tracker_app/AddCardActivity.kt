@@ -17,6 +17,9 @@ import android.text.TextWatcher
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
+import androidx.appcompat.app.AppCompatDelegate
+import android.content.Context
+
 
 
 class AddCardActivity : AppCompatActivity() {
@@ -36,6 +39,11 @@ class AddCardActivity : AppCompatActivity() {
     private var selectedCardType = cardTypes[0]
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val isDark = prefs.getBoolean("dark_theme", false)
+        val mode = if (isDark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+        AppCompatDelegate.setDefaultNightMode(mode)
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.add_card_layout)
 

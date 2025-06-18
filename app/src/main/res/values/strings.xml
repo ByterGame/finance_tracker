@@ -5,4 +5,5 @@
     <string name="title_activity_create_card">CreateCardActivity</string>
     <string name="title_activity_all_cards">AllCardsActivity</string>
     <string name="title_activity_add_category">AddCategoryActivity</string>
+    <string name="warning_clean">This action will result in complete deletion of data, including on remote servers.</string>
 </resources>

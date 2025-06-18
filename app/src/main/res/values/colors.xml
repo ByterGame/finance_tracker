@@ -7,4 +7,5 @@
     <color name="primary_color">#FF5C27FE</color>
     <color name="darkened_color">#FF6044B5</color>
     <color name="theme_color">@color/white</color>
+    <color name="warning_red">#FFFF0000</color>
 </resources>
