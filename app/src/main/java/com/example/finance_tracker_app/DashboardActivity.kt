@@ -69,6 +69,12 @@ class DashboardActivity : AppCompatActivity() {
         startDateInput = findViewById(R.id.start_data_graph)
         endDateInput = findViewById(R.id.end_data_graph)
         typeGraphSpinner = findViewById(R.id.graph_type)
+        val detailedStatisticButton = findViewById<LinearLayout>(R.id.detailed_statistic_button)
+
+        detailedStatisticButton.setOnClickListener {
+            startActivity(Intent(this@DashboardActivity, DetailedStatisticsActivity::class.java))
+            finish()
+        }
 
         val defaultCal = Calendar.getInstance().apply {
             set(2025, Calendar.JUNE, 1, 0, 0, 0)
@@ -117,7 +123,7 @@ class DashboardActivity : AppCompatActivity() {
         lineChart.isDragEnabled = true
         lineChart.setScaleEnabled(true)
         lineChart.setPinchZoom(true)
-        lineChart.setNoDataText("Нет данных для отображения")
+        lineChart.setNoDataText("No data to display")
         lineChart.setNoDataTextColor(ContextCompat.getColor(this@DashboardActivity, R.color.primary_color))
         lineChart.animateX(1000)
 

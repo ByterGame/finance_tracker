@@ -105,47 +105,47 @@
             android:layout_marginTop="10dp"
             android:layout_gravity="center"
             android:gravity="start"/>
-        
+
         <LinearLayout
             android:layout_width="350dp"
             android:layout_height="50dp"
-            android:background="@drawable/edittext_background"
-            android:backgroundTint="@color/primary_color"
             android:layout_gravity="center"
             android:layout_marginTop="30dp"
+            android:background="@drawable/edittext_background"
+            android:backgroundTint="@color/primary_color"
             android:orientation="horizontal">
 
             <TextView
                 android:layout_width="0dp"
-                android:layout_weight="1"
                 android:layout_height="match_parent"
-                android:text="Balance:"
+                android:layout_weight="1"
                 android:fontFamily="@font/lexend_deca"
+                android:text="Balance:"
                 android:textColor="@color/theme_color"
-                android:textSize="20sp"/>
+                android:textSize="20sp" />
 
             <EditText
                 android:id="@+id/card_balance"
                 android:layout_width="0dp"
-                android:layout_weight="1"
                 android:layout_height="match_parent"
+                android:layout_weight="1"
                 android:background="@drawable/edittext_background"
-                android:inputType="numberDecimal"
-                android:hint="0"
-                android:textColor="@color/theme_color"
-                android:textColorHint="@color/theme_color"
                 android:fontFamily="@font/lexend_deca"
                 android:gravity="center_vertical|end"
-                android:textSize="16sp"/>
+                android:hint="0"
+                android:inputType="numberDecimal"
+                android:textColor="@color/theme_color"
+                android:textColorHint="@color/theme_color"
+                android:textSize="16sp" />
 
             <TextView
                 android:layout_width="0dp"
-                android:layout_weight="0.1"
                 android:layout_height="match_parent"
-                android:text="$"
+                android:layout_weight="0.1"
                 android:fontFamily="@font/lexend_deca"
+                android:text="$"
                 android:textColor="@color/theme_color"
-                android:textSize="20sp"/>
+                android:textSize="20sp" />
 
         </LinearLayout>
 

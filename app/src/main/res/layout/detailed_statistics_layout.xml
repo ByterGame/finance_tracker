@@ -1,0 +1,607 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/image2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/background_piece_1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginStart="-140dp"
+        android:layout_marginTop="80dp"
+        android:rotation="-40"/>
+
+    <ImageView
+        android:id="@+id/image3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/background_piece_2"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.1"
+        app:layout_constraintHorizontal_bias="1.02"/>
+
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@color/primary_color"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/back_arrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/back_arrow"
+            android:layout_gravity="center"
+            android:layout_marginStart="30dp"
+            android:layout_marginTop="3dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Detailed statistics window"
+            android:textColor="@color/theme_color"
+            android:textSize="24sp"
+            android:fontFamily="@font/lexend_deca"
+            android:layout_marginStart="20dp"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/information_period"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        app:layout_constraintTop_toBottomOf="@id/header"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Statistics for the last:"
+            android:textColor="@color/primary_color"
+            android:fontFamily="@font/lexend_deca"
+            android:gravity="center"
+            android:layout_gravity="center_vertical|start"
+            android:layout_marginLeft="7dp"
+            android:textSize="11sp"/>
+
+        <EditText
+            android:id="@+id/years_period"
+            android:layout_width="45dp"
+            android:layout_height="20dp"
+            android:background="@drawable/edittext_background_mini"
+            android:inputType="numberDecimal"
+            android:hint="0"
+            android:textColor="@color/theme_color"
+            android:textColorHint="@color/theme_color"
+            android:fontFamily="@font/lexend_deca"
+            android:layout_gravity="center_vertical"
+            android:gravity="center"
+            android:layout_marginLeft="5dp"
+            android:textSize="11sp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="year(s),"
+            android:textColor="@color/primary_color"
+            android:fontFamily="@font/lexend_deca"
+            android:gravity="center"
+            android:layout_gravity="center_vertical|start"
+            android:layout_marginLeft="3dp"
+            android:textSize="11sp"/>
+
+        <EditText
+            android:id="@+id/months_period"
+            android:layout_width="45dp"
+            android:layout_height="20dp"
+            android:background="@drawable/edittext_background_mini"
+            android:inputType="numberDecimal"
+            android:hint="0"
+            android:textColor="@color/theme_color"
+            android:textColorHint="@color/theme_color"
+            android:fontFamily="@font/lexend_deca"
+            android:layout_gravity="center_vertical"
+            android:gravity="center"
+            android:layout_marginLeft="3dp"
+            android:textSize="11sp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="month(s),"
+            android:textColor="@color/primary_color"
+            android:fontFamily="@font/lexend_deca"
+            android:gravity="center"
+            android:layout_gravity="center_vertical|start"
+            android:layout_marginLeft="3dp"
+            android:textSize="11sp"/>
+
+        <EditText
+            android:id="@+id/days_period"
+            android:layout_width="45dp"
+            android:layout_height="20dp"
+            android:background="@drawable/edittext_background_mini"
+            android:inputType="numberDecimal"
+            android:hint="0"
+            android:textColor="@color/theme_color"
+            android:textColorHint="@color/theme_color"
+            android:fontFamily="@font/lexend_deca"
+            android:layout_gravity="center_vertical"
+            android:gravity="center"
+            android:layout_marginLeft="3dp"
+            android:textSize="11sp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="day(s)"
+            android:textColor="@color/primary_color"
+            android:fontFamily="@font/lexend_deca"
+            android:gravity="center"
+            android:layout_gravity="center_vertical|start"
+            android:layout_marginLeft="3dp"
+            android:textSize="11sp"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/general_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="vertical"
+        app:layout_constraintTop_toBottomOf="@id/information_period">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginLeft="7dp"
+                android:fontFamily="@font/lexend_deca"
+                android:gravity="center"
+                android:text="Total amount of transactions:"
+                android:textColor="@color/primary_color"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/total_amount"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginLeft="7dp"
+                android:layout_weight="1"
+                android:fontFamily="@font/lexend_deca"
+                android:gravity="end"
+                android:text="12, 142"
+                android:textColor="@color/primary_color"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/currency_total_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginLeft="7dp"
+                android:layout_marginRight="10dp"
+                android:fontFamily="@font/lexend_deca"
+                android:gravity="center"
+                android:text="$"
+                android:textColor="@color/primary_color"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginLeft="7dp"
+                android:fontFamily="@font/lexend_deca"
+                android:gravity="center"
+                android:text="Total amount of expenses:"
+                android:textColor="@color/primary_color"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/total_expenses"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginLeft="7dp"
+                android:layout_weight="1"
+                android:fontFamily="@font/lexend_deca"
+                android:gravity="end"
+                android:text="5, 062"
+                android:textColor="@color/primary_color"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/currency_total_expenses"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginLeft="7dp"
+                android:layout_marginRight="10dp"
+                android:fontFamily="@font/lexend_deca"
+                android:gravity="center"
+                android:text="$"
+                android:textColor="@color/primary_color"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginLeft="7dp"
+                android:fontFamily="@font/lexend_deca"
+                android:gravity="center"
+                android:text="Total income:"
+                android:textColor="@color/primary_color"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/total_income"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginLeft="7dp"
+                android:layout_weight="1"
+                android:fontFamily="@font/lexend_deca"
+                android:gravity="end"
+                android:text="7, 080"
+                android:textColor="@color/primary_color"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/currency_total_income"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginLeft="7dp"
+                android:layout_marginRight="10dp"
+                android:fontFamily="@font/lexend_deca"
+                android:gravity="center"
+                android:text="$"
+                android:textColor="@color/primary_color"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <com.github.mikephil.charting.charts.PieChart
+        android:id="@+id/pieChartTotalAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.35"/>
+
+    <com.github.mikephil.charting.charts.PieChart
+        android:id="@+id/pieChartTotalIncome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.48"
+        app:layout_constraintHorizontal_bias="0.2"/>
+
+    <com.github.mikephil.charting.charts.PieChart
+        android:id="@+id/pieChartTotalExpenses"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.55"
+        app:layout_constraintHorizontal_bias="0.8"/>
+
+    <LinearLayout
+        android:id="@+id/top_categories"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/pieChartTotalExpenses"
+        android:layout_marginTop="10dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Important categories:"
+            android:textColor="@color/primary_color"
+            android:fontFamily="@font/lexend_deca"
+            android:textSize="18dp"
+            android:layout_marginLeft="10dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="3dp">
+
+            <TextView
+                android:id="@+id/name_expense_category1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="products:"
+                android:textColor="@color/expense_red"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:layout_marginLeft="25dp"/>
+
+            <TextView
+                android:id="@+id/amount_expense_category1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="-1, 716"
+                android:textColor="@color/expense_red"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:gravity="end"/>
+
+            <TextView
+                android:id="@+id/currency_expense_category1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$"
+                android:textColor="@color/expense_red"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:layout_marginRight="10dp"
+                android:layout_marginLeft="5dp"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="3dp">
+
+            <TextView
+                android:id="@+id/name_expense_category2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="entertainment:"
+                android:textColor="@color/expense_red"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:layout_marginLeft="25dp"/>
+
+            <TextView
+                android:id="@+id/amount_expense_category2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="-1, 253"
+                android:textColor="@color/expense_red"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:gravity="end"/>
+
+            <TextView
+                android:id="@+id/currency_expense_category2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$"
+                android:textColor="@color/expense_red"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:layout_marginRight="10dp"
+                android:layout_marginLeft="5dp"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="3dp">
+
+            <TextView
+                android:id="@+id/name_expense_category3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="technique:"
+                android:textColor="@color/expense_red"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:layout_marginLeft="25dp"/>
+
+            <TextView
+                android:id="@+id/amount_expense_category3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="-789"
+                android:textColor="@color/expense_red"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:gravity="end"/>
+
+            <TextView
+                android:id="@+id/currency_expense_category3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$"
+                android:textColor="@color/expense_red"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:layout_marginRight="10dp"
+                android:layout_marginLeft="5dp"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="3dp">
+
+            <TextView
+                android:id="@+id/name_income_category1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="salary:"
+                android:textColor="@color/income_green"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:layout_marginLeft="25dp"/>
+
+            <TextView
+                android:id="@+id/amount_income_category1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="3, 820"
+                android:textColor="@color/income_green"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:gravity="end"/>
+
+            <TextView
+                android:id="@+id/currency_income_category1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$"
+                android:textColor="@color/income_green"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:layout_marginRight="10dp"
+                android:layout_marginLeft="5dp"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="3dp">
+
+            <TextView
+                android:id="@+id/name_income_category2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="deposit interest:"
+                android:textColor="@color/income_green"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:layout_marginLeft="25dp"/>
+
+            <TextView
+                android:id="@+id/amount_income_category2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="1, 316"
+                android:textColor="@color/income_green"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:gravity="end"/>
+
+            <TextView
+                android:id="@+id/currency_income_category2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$"
+                android:textColor="@color/income_green"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:layout_marginRight="10dp"
+                android:layout_marginLeft="5dp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="3dp">
+
+            <TextView
+                android:id="@+id/name_income_category3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="dividends:"
+                android:textColor="@color/income_green"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:layout_marginLeft="25dp"/>
+
+            <TextView
+                android:id="@+id/amount_income_category3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="1, 012"
+                android:textColor="@color/income_green"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:gravity="end"/>
+
+            <TextView
+                android:id="@+id/currency_income_category3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$"
+                android:textColor="@color/income_green"
+                android:fontFamily="@font/lexend_deca"
+                android:textSize="14sp"
+                android:layout_marginRight="10dp"
+                android:layout_marginLeft="5dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/export_all_data"
+        android:layout_width="200dp"
+        android:layout_height="40dp"
+        android:background="@drawable/spinner_background"
+        android:layout_marginTop="30dp"
+        android:text="Export all data"
+        android:textAllCaps="false"
+        android:fontFamily="@font/lexend_deca"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@id/top_categories"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

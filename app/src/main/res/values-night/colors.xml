@@ -8,4 +8,6 @@
     <color name="darkened_color">#FF8C7271</color>
     <color name="theme_color">@color/black</color>
     <color name="warning_red">#FFFF0000</color>
+    <color name="expense_red">#FFC22A2A</color>
+    <color name="income_green">#FF409936</color>
 </resources>

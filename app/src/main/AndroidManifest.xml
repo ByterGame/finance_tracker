@@ -17,10 +17,13 @@
         android:theme="@style/Theme.Finance_tracker_app"
         tools:targetApi="31">
         <activity
+            android:name=".DetailedStatisticsActivity"
+            android:exported="false" />
+        <activity
             android:name=".SettingsActivity"
             android:exported="false"
             android:label="SettingsActivity"
-            android:theme="@style/Theme.Finance_tracker_app"/>
+            android:theme="@style/Theme.Finance_tracker_app" />
         <activity
             android:name=".AddOperationActivity"
             android:exported="false"
