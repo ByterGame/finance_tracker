@@ -16,4 +16,7 @@ interface OperationDao {
 
     @Update
     suspend fun updateOperation(operation: Operation)
+
+    @Query("DELETE FROM operations")
+    suspend fun deleteAllOperations()
 }

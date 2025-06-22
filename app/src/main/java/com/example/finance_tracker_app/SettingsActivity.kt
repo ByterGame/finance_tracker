@@ -10,6 +10,11 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Button
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import android.widget.Toast
+import androidx.core.content.edit
+
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -28,6 +33,47 @@ class SettingsActivity : AppCompatActivity() {
         val backArrow = findViewById<ImageButton>(R.id.back_arrow)
         backArrow.setOnClickListener {
             startActivity(Intent(this@SettingsActivity, DashboardActivity::class.java))
+        }
+
+        val clearDataButton = findViewById<Button>(R.id.clear_data_button)
+
+        clearDataButton.setOnClickListener {
+            val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+            builder.setTitle("Confirm Deletion")
+            builder.setMessage("Are you sure you want to delete all data without the possibility of recovery?")
+            builder.setPositiveButton("Yes") { dialog, _ ->
+                val prefsList = listOf(
+                    "settings",
+                    "dark_theme",
+                    "cards_secure_prefs",
+                    "user_categories",
+                    "categories_list",
+                    "cards_list",
+                    "dashboard_prefs",
+                    "secure_prefs",
+                    "app_prefs",
+                )
+
+                for (name in prefsList) {
+                    getSharedPreferences(name, Context.MODE_PRIVATE).edit() { clear() }
+                }
+
+                lifecycleScope.launch {
+                    val db = AppDatabase.getDatabase(this@SettingsActivity)
+                    db.operationDao().deleteAllOperations()
+
+                    Toast.makeText(this@SettingsActivity, "Data cleared successfully", Toast.LENGTH_SHORT).show()
+
+                    startActivity(Intent(this@SettingsActivity, Registration::class.java))
+                    finish()
+                }
+                dialog.dismiss()
+            }
+            builder.setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+
+            builder.create().show()
         }
 
         setupSwitchTheme()

@@ -307,7 +307,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0.35"/>
+        app:layout_constraintVertical_bias="0.25"/>
 
     <com.github.mikephil.charting.charts.PieChart
         android:id="@+id/pieChartTotalIncome"
@@ -319,7 +319,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintVertical_bias="0.48"
-        app:layout_constraintHorizontal_bias="0.2"/>
+        app:layout_constraintHorizontal_bias="0.02"/>
 
     <com.github.mikephil.charting.charts.PieChart
         android:id="@+id/pieChartTotalExpenses"
@@ -330,8 +330,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0.55"
-        app:layout_constraintHorizontal_bias="0.8"/>
+        app:layout_constraintVertical_bias="0.52"
+        app:layout_constraintHorizontal_bias="0.95"/>
 
     <LinearLayout
         android:id="@+id/top_categories"

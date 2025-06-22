@@ -34,7 +34,6 @@ class AddOperationActivity : AppCompatActivity() {
     private lateinit var addOperation: Button
 
     private val gson = Gson()
-    private val defaultCategories = listOf("Food", "Transport", "Entertainment", "Health", "Utilities", "Salary", "Other")
     private var cardsList: List<Card> = emptyList()
     private var userCategories: MutableList<String> = mutableListOf()
     private lateinit var db: AppDatabase
@@ -227,7 +226,6 @@ class AddOperationActivity : AppCompatActivity() {
 
     private fun updateCategorySpinnerWithNewCategory(newCategory: String?) {
         val categories = mutableListOf("Select category").apply {
-            addAll(defaultCategories)
             addAll(userCategories)
             add("Add new category")
         }

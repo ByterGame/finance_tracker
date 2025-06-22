@@ -16,6 +16,7 @@ import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
 import androidx.appcompat.app.AppCompatDelegate
 import android.content.Context
 
+data class Category(val name: String, val color: Int)
 
 class AddCategoryActivity : AppCompatActivity(), ColorPickerDialogListener {
 
@@ -75,14 +76,16 @@ class AddCategoryActivity : AppCompatActivity(), ColorPickerDialogListener {
     private fun saveCustomCategory(categoryName: String) {
         val prefs = getSharedPreferences("user_categories", MODE_PRIVATE)
         val json = prefs.getString("categories_list", null)
-        val currentCategories: MutableList<String> = if (json != null) {
-            val type = object : TypeToken<List<String>>() {}.type
+
+        val type = object : TypeToken<MutableList<Category>>() {}.type
+        val currentCategories: MutableList<Category> = if (json != null) {
             gson.fromJson(json, type)
         } else {
             mutableListOf()
         }
-        if (!currentCategories.contains(categoryName)) {
-            currentCategories.add(categoryName)
+        
+        if (currentCategories.none { it.name == categoryName }) {
+            currentCategories.add(Category(categoryName, selectedColor))
             prefs.edit().putString("categories_list", gson.toJson(currentCategories)).apply()
         }
     }
