@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:layout_marginTop="3dp">
+
+    <TextView
+        android:id="@+id/name_category"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="entertainment:"
+        android:fontFamily="@font/lexend_deca"
+        android:textSize="14sp"
+        android:layout_marginLeft="25dp"/>
+
+    <TextView
+        android:id="@+id/amount_category"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="-1,253"
+        android:fontFamily="@font/lexend_deca"
+        android:textSize="14sp"
+        android:gravity="end"/>
+
+    <TextView
+        android:id="@+id/currency_category"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="$"
+        android:fontFamily="@font/lexend_deca"
+        android:textSize="14sp"
+        android:layout_marginRight="10dp"
+        android:layout_marginLeft="5dp"/>
+
+</LinearLayout>
