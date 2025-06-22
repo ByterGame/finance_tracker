@@ -11,20 +11,29 @@ import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import android.graphics.Color
+import android.os.Environment
+import android.util.Log
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.lifecycleScope
 import com.github.mikephil.charting.components.Legend
 import com.example.finance_tracker_app.databinding.DetailedStatisticsLayoutBinding
+import com.example.finance_tracker_app.utils.CardStorage
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import okhttp3.internal.cache.DiskLruCache
+import java.io.File
+import java.time.LocalDateTime
+import java.time.ZoneId
+import com.example.finance_tracker_app.AddCardActivity.Card
 
 
 class DetailedStatisticsActivity : AppCompatActivity() {
+
 
     private lateinit var binding: DetailedStatisticsLayoutBinding
     private lateinit var db: AppDatabase
@@ -52,27 +61,159 @@ class DetailedStatisticsActivity : AppCompatActivity() {
         db = AppDatabase.getDatabase(this)
         operationDao = db.operationDao()
 
+        val watcher = object : android.text.TextWatcher {
+            override fun afterTextChanged(s: android.text.Editable?) {
+                updateStatistics()
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        }
+
+        binding.yearsPeriod.addTextChangedListener(watcher)
+        binding.monthsPeriod.addTextChangedListener(watcher)
+        binding.daysPeriod.addTextChangedListener(watcher)
+
+        updateStatistics()
+
+        binding.backArrow.setOnClickListener {
+            startActivity(Intent(this@DetailedStatisticsActivity, DashboardActivity::class.java))
+            finish()
+        }
+
+        binding.exportAllData.setOnClickListener {
+            exportDataToCSV()
+        }
+    }
+
+    private fun exportDataToCSV() {
         lifecycleScope.launch {
-            val operations = operationDao.getAllOperations()
+            val years = binding.yearsPeriod.text.toString().toIntOrNull() ?: 0
+            val months = binding.monthsPeriod.text.toString().toIntOrNull() ?: 0
+            val days = binding.daysPeriod.text.toString().toIntOrNull() ?: 0
+
+            val now = LocalDateTime.now()
+            val fromDate = now.minusYears(years.toLong())
+                .minusMonths(months.toLong())
+                .minusDays(days.toLong())
+
+            val fromMillis = fromDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+            val operations = operationDao.getAllOperations().filter { it.date >= fromMillis }
+            val cards = CardStorage.loadSavedCards(this@DetailedStatisticsActivity)
+
+            val csvContent = buildCSVContent(operations, cards, fromDate, now)
+            val file = saveCSVToDocuments(csvContent)
+
+            if (file != null) {
+                Toast.makeText(this@DetailedStatisticsActivity, "File saved: ${file.absolutePath}", Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(this@DetailedStatisticsActivity, "Failed to save data", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun buildCSVContent(
+        operations: List<Operation>,
+        cards: List<Card>,
+        fromDate: LocalDateTime,
+        toDate: LocalDateTime
+    ): String {
+        val sb = StringBuilder()
+
+        sb.append("Finance Tracker Export\n")
+        sb.append("Period:,${fromDate.toLocalDate()},to,${toDate.toLocalDate()}\n\n")
+
+        sb.append("Operations\n")
+        sb.append("Date,Type,Category,Amount\n")
+        val dateFormatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        for (op in operations) {
+            val opDate = java.time.Instant.ofEpochMilli(op.date).atZone(ZoneId.systemDefault()).toLocalDate()
+            sb.append("${opDate.format(dateFormatter)},${op.type},${op.category},${op.amount}\n")
+        }
+        sb.append("\n")
+
+        val incomeOps = operations.filter { it.type.equals("income", ignoreCase = true) }
+        val expenseOps = operations.filter { it.type.equals("expense", ignoreCase = true) }
+
+        val totalIncome = incomeOps.sumOf { it.amount }
+        val totalExpense = expenseOps.sumOf { it.amount }
+
+        val monthsBetween = java.time.temporal.ChronoUnit.MONTHS.between(fromDate, toDate).coerceAtLeast(1)
+        val avgIncomePerMonth = totalIncome / monthsBetween
+        val avgExpensePerMonth = totalExpense / monthsBetween
+
+        sb.append("Summary\n")
+        sb.append("Total Income,${totalIncome}\n")
+        sb.append("Total Expense,${totalExpense}\n")
+        sb.append("Average Income Per Month,${String.format("%.2f", avgIncomePerMonth)}\n")
+        sb.append("Average Expense Per Month,${String.format("%.2f", avgExpensePerMonth)}\n\n")
+
+        sb.append("Cards\n")
+        sb.append("Type,Name,Balance\n")
+        for (card in cards) {
+            sb.append("${card.type},${card.name},${card.balance}\n")
+        }
+
+        return sb.toString()
+    }
+
+    private fun saveCSVToFile(csvContent: String): android.net.Uri? {
+        return try {
+            val filename = "finance_export_${System.currentTimeMillis()}.csv"
+            val file = File(getExternalFilesDir(null), filename)
+            file.writeText(csvContent)
+            androidx.core.content.FileProvider.getUriForFile(
+                this,
+                "${applicationContext.packageName}.fileprovider",
+                file
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    private fun saveCSVToDocuments(csvContent: String): File? {
+        return try {
+            val docsDir = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
+                ?: return null
+            val filename = "finance_export_${System.currentTimeMillis()}.csv"
+            val file = File(docsDir, filename)
+            file.writeText(csvContent)
+            file
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density).toInt()
+    }
+
+    private fun updateStatistics() {
+        val years = binding.yearsPeriod.text.toString().toIntOrNull() ?: 0
+        val months = binding.monthsPeriod.text.toString().toIntOrNull() ?: 0
+        val days = binding.daysPeriod.text.toString().toIntOrNull() ?: 0
+
+        val now = LocalDateTime.now()
+        val fromDate = now.minusYears(years.toLong())
+            .minusMonths(months.toLong())
+            .minusDays(days.toLong())
+
+        val fromMillis = fromDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+        lifecycleScope.launch {
+            val operations = operationDao.getAllOperations().filter { it.date >= fromMillis }
             val categories = loadUserCategoriesWithColor()
 
             setupTotalAmountChart(operations)
             setupPieChartForType(operations, categories, "expense", binding.pieChartTotalExpenses, "Total expense")
             setupPieChartForType(operations, categories, "income", binding.pieChartTotalIncome, "Total income")
             setupGeneralInfo(operations)
-
-
             populateTopCategories(operations)
         }
-
-        binding.backArrow.setOnClickListener {
-            startActivity(Intent(this@DetailedStatisticsActivity, DashboardActivity::class.java))
-            finish()
-        }
-    }
-
-    fun dpToPx(dp: Int): Int {
-        return (dp * resources.displayMetrics.density).toInt()
     }
 
     private fun setupGeneralInfo(operations: List<Operation>) {

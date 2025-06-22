@@ -19,7 +19,7 @@ import java.text.DecimalFormatSymbols
 import java.util.Locale
 import androidx.appcompat.app.AppCompatDelegate
 import android.content.Context
-
+import com.example.finance_tracker_app.utils.CardStorage
 
 
 class AddCardActivity : AppCompatActivity() {
@@ -165,43 +165,15 @@ class AddCardActivity : AppCompatActivity() {
             val fullCardName = nameInput.text.toString().trim()
             val balanceString = balanceInput.text.toString().replace(",", "")
             val balance = balanceString.toDoubleOrNull() ?: 0.0
-            val savedCards = loadSavedCards().toMutableList()
+            val savedCards = CardStorage.loadSavedCards(this).toMutableList()
             savedCards.add(Card(type = selectedCardType, name = fullCardName, balance = balance))
-            saveCards(savedCards)
+            CardStorage.saveCards(this, savedCards)
 
             Toast.makeText(this, "Card saved", Toast.LENGTH_SHORT).show()
             nameInput.text.clear()
-        }
-    }
 
-    private fun getEncryptedPrefs(): SharedPreferences {
-        val masterKey = MasterKey.Builder(applicationContext)
-            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-            .build()
-
-        return EncryptedSharedPreferences.create(
-            applicationContext,
-            "cards_secure_prefs",
-            masterKey,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
-    }
-
-    private fun saveCards(cards: List<Card>) {
-        val json = gson.toJson(cards)
-        getEncryptedPrefs().edit().putString("cards_list", json).apply()
-        startActivity(Intent(this@AddCardActivity, DashboardActivity::class.java))
-        finish()
-    }
-
-    private fun loadSavedCards(): List<Card> {
-        val json = getEncryptedPrefs().getString("cards_list", null)
-        return if (json != null) {
-            val type = object : TypeToken<List<Card>>() {}.type
-            gson.fromJson(json, type)
-        } else {
-            emptyList()
+            startActivity(Intent(this@AddCardActivity, DashboardActivity::class.java))
+            finish()
         }
     }
 }
