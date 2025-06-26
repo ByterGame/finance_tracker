@@ -150,9 +150,9 @@ class DetailedStatisticsActivity : AppCompatActivity() {
         sb.append("Average Expense Per Month,${String.format("%.2f", avgExpensePerMonth)}\n\n")
 
         sb.append("Cards\n")
-        sb.append("Type,Name,Balance\n")
+        sb.append("Name,Balance,Currency\n")
         for (card in cards) {
-            sb.append("${card.type},${card.name},${card.balance}\n")
+            sb.append(",${card.name},${card.balance},${card.currency}\n")
         }
 
         return sb.toString()

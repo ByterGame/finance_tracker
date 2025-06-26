@@ -8,7 +8,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import android.content.Context
 import android.content.Intent
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.Spinner
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -19,20 +26,32 @@ import androidx.core.content.edit
 class SettingsActivity : AppCompatActivity() {
 
     private val prefs by lazy { getSharedPreferences("settings", Context.MODE_PRIVATE) }
+    private val currencyNameResMap = mapOf(
+        "USD" to R.string.currency_usd,
+        "EUR" to R.string.currency_eur,
+        "GBP" to R.string.currency_gbp,
+        "JPY" to R.string.currency_jpy,
+        "CNY" to R.string.currency_cny,
+        "RUB" to R.string.currency_rub,
+        "INR" to R.string.currency_inr,
+        "AUD" to R.string.currency_aud,
+        "CAD" to R.string.currency_cad,
+        "CHF" to R.string.currency_chf,
+        "TRY" to R.string.currency_try
+    )
+    private lateinit var spinnerCurrency: Spinner
 
     override fun onCreate(savedInstanceState: Bundle?) {
         applySavedTheme()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.settings_layout)
-
-//        val themedDrawable = ContextCompat.getDrawable(this, R.drawable.spinner_background)
-//        findViewById<Button>(R.id.clear_data_button).background = themedDrawable
-
-//        val clearButton = findViewById<Button>(R.id.clear_data_button)
-//        clearButton.setBackgroundResource(R.drawable.spinner_background)
+        spinnerCurrency = findViewById<Spinner>(R.id.currency_spinner)
         val backArrow = findViewById<ImageButton>(R.id.back_arrow)
         backArrow.setOnClickListener {
-            startActivity(Intent(this@SettingsActivity, DashboardActivity::class.java))
+            val intent = Intent(this@SettingsActivity, DashboardActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            finish()
         }
 
         val clearDataButton = findViewById<Button>(R.id.clear_data_button)
@@ -77,6 +96,52 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         setupSwitchTheme()
+        setupCurrencySpinner()
+    }
+
+    private fun setupCurrencySpinner() {
+        val currencyCodes = currencyNameResMap.keys.toList()
+        val currencyDisplayNames = currencyCodes.map { getString(currencyNameResMap[it]!!) }
+
+        val adapter = object : ArrayAdapter<String>(
+            this,
+            R.layout.spinner_item,
+            currencyDisplayNames
+        ) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = convertView ?: LayoutInflater.from(context)
+                    .inflate(R.layout.spinner_item, parent, false)
+                val textView = view.findViewById<TextView>(R.id.spinnerText)
+                textView.text = "Main currency: ${getItem(position)}"
+                return view
+            }
+
+            override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = convertView ?: LayoutInflater.from(context)
+                    .inflate(R.layout.spinner_dropdown_item, parent, false)
+                val textView = view.findViewById<TextView>(R.id.dropdownText)
+                textView.text = getItem(position)
+                return view
+            }
+        }
+
+        spinnerCurrency.adapter = adapter
+
+        val savedCurrency = prefs.getString("main_currency", "USD") ?: "USD"
+        val selectedIndex = currencyCodes.indexOf(savedCurrency)
+        if (selectedIndex >= 0) {
+            spinnerCurrency.setSelection(selectedIndex)
+        }
+
+        spinnerCurrency.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                val selectedCurrency = currencyCodes[position]
+                prefs.edit().putString("main_currency", selectedCurrency).apply()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+
     }
 
     private fun setupSwitchTheme() {

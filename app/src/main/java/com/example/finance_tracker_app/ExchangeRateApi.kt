@@ -9,10 +9,12 @@ data class ErApiResponse(
     val result: String? = null,
     @SerializedName("base_code")
     val baseCode: String? = null,
-    @SerializedName("time_last_update_utc")
+    @SerializedName("time_last_update_unix")
     val lastUpdate: String? = null,
     @SerializedName("rates")
-    val rates: Map<String, Any>? = null
+    val rates: Map<String, Any>? = null,
+    @SerializedName("time_next_update_unix")
+    val nextUpdate: String? = null
 )
 
 interface ExchangeRateApi {

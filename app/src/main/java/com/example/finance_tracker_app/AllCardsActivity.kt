@@ -14,11 +14,13 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import androidx.appcompat.app.AppCompatDelegate
 import android.content.Context
+import com.example.finance_tracker_app.AddCardActivity.Card
+
+
 
 
 class AllCardsActivity : AppCompatActivity() {
 
-    data class Card(val type: String, val name: String, val balance: Double)
 
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var cards: MutableList<Card>
@@ -97,16 +99,26 @@ class AllCardsActivity : AppCompatActivity() {
                 val balance = cardView.findViewById<TextView>(R.id.card_balance)
                 val crushButton = cardView.findViewById<ImageButton>(R.id.crush_button)
 
-                typeAndName.text = "${card.type}: ${card.name}"
-                balance.text = String.format("%,.0f $", card.balance)
-
-                val iconRes = when (card.type) {
-                    "Debit card" -> R.drawable.card
-                    "Savings account" -> R.drawable.card
-                    "Brokerage account" -> R.drawable.card
-                    else -> R.drawable.card
+                typeAndName.text = "Card name: ${card.name}"
+                val currencySymbol = when (card.currency) {
+                    "USD" -> "$"
+                    "EUR" -> "€"
+                    "GBP" -> "£"
+                    "JPY", "CNY" -> "¥"
+                    "RUB" -> "₽"
+                    "INR" -> "₹"
+                    "AUD" -> "A$"
+                    "CAD" -> "C$"
+                    "CHF" -> "₣"
+                    "TRY" -> "₺"
+                    else -> card.currency ?: ""
                 }
-                icon.setImageResource(iconRes)
+                val formattedBalance = String.format("%,.0f", card.balance)
+
+                balance.text = "$formattedBalance $currencySymbol"
+
+
+                icon.setImageResource(R.drawable.card)
 
                 crushButton.setOnClickListener {
                     showDeleteConfirmationDialog(index, cardView)

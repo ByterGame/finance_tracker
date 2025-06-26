@@ -33,12 +33,18 @@ import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.utils.MPPointF
 import androidx.appcompat.app.AppCompatDelegate
+import com.example.finance_tracker_app.AddCardActivity.Card
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+
 
 
 
 class DashboardActivity : AppCompatActivity() {
 
-    data class Card(val type: String, val name: String, val balance: Double)
 
     private lateinit var lineChart: LineChart
     private lateinit var startDateInput: EditText
@@ -56,12 +62,42 @@ class DashboardActivity : AppCompatActivity() {
     private val KEY_START_DATE = "start_date"
     private val KEY_END_DATE = "end_date"
     private val KEY_GRAPH_TYPE_POS = "graph_type_position"
+    private var mainCurrency =  ""
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
         val isDark = prefs.getBoolean("dark_theme", false)
         val mode = if (isDark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         AppCompatDelegate.setDefaultNightMode(mode)
+        mainCurrency = getSharedPreferences("settings", Context.MODE_PRIVATE)
+            .getString("main_currency", "USD") ?: "USD"
+        ExchangeRatesManager.loadFromPrefs(this)
+
+        val hasInternet = checkInternetConnection()
+
+        if (hasInternet) {
+            if (ExchangeRatesManager.isUpdateNeeded()) {
+                ExchangeRateClient.api.getRates(mainCurrency).enqueue(object : Callback<ErApiResponse> {
+                    override fun onResponse(call: Call<ErApiResponse>, response: Response<ErApiResponse>) {
+                        val data = response.body()
+                        if (data != null && data.result == "success" && data.rates != null) {
+                            ExchangeRatesManager.updateRates(data.rates, data.lastUpdate, data.nextUpdate)
+                            ExchangeRatesManager.saveToPrefs(this@DashboardActivity)
+                        }
+                    }
+                    override fun onFailure(call: Call<ErApiResponse>, t: Throwable) {
+
+                    }
+                })
+            }
+        } else {
+            if (ExchangeRatesManager.isUpdateNeeded()) {
+                runOnUiThread {
+                    Toast.makeText(this, "Вы используете устаревшие курсы валют. Пожалуйста, подключитесь к интернету для обновления.", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
         super.onCreate(savedInstanceState)
         setContentView(R.layout.dashboard_layout)
 
@@ -105,7 +141,7 @@ class DashboardActivity : AppCompatActivity() {
                 updateChart()
             }
         }
-        initCardsUI()
+        runOnUiThread { initCardsUI() }
         setupSettingsButton()
     }
 
@@ -115,6 +151,13 @@ class DashboardActivity : AppCompatActivity() {
             startActivity(Intent(this@DashboardActivity, SettingsActivity::class.java))
             finish()
         }
+    }
+
+    fun checkInternetConnection(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
     private fun initChartConfig() {
@@ -157,6 +200,20 @@ class DashboardActivity : AppCompatActivity() {
         val allCards = findViewById<FrameLayout>(R.id.all_cards_button)
         val addBtn = findViewById<LinearLayout>(R.id.add_operation_section)
 
+        val currencySymbolMap = mapOf(
+            "USD" to "$",
+            "EUR" to "€",
+            "GBP" to "£",
+            "JPY" to "¥",
+            "CNY" to "¥",
+            "RUB" to "₽",
+            "INR" to "₹",
+            "AUD" to "A$",
+            "CAD" to "C$",
+            "CHF" to "₣",
+            "TRY" to "₺"
+        )
+
         anyCardContainer.removeAllViews()
         allCards.setOnClickListener {
             startActivity(Intent(this, AllCardsActivity::class.java))
@@ -166,9 +223,20 @@ class DashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, AddOperationActivity::class.java))
             finish()
         }
-
+        var totalValueSum = 0.0
         val cards = loadCards()
-        totalValue.text = String.format("%,.0f $", cards.sumOf { it.balance })
+        for (card in cards) {
+            val fromCurrency = card.currency ?: continue
+            val rateFrom = ExchangeRatesManager.getRate(fromCurrency)
+            val rateTo = ExchangeRatesManager.getRate(mainCurrency)
+            if (rateFrom != 0.0) {
+                val converted = card.balance / rateFrom * rateTo
+                totalValueSum += converted
+            }
+        }
+        val formattedTotalAmount = String.format("%,.0f", totalValueSum)
+        val currencyTotalAmount = currencySymbolMap[mainCurrency]
+        totalValue.text = "$formattedTotalAmount $currencyTotalAmount"
 
         if (cards.isEmpty()) {
             allCards.isEnabled = false
@@ -188,8 +256,11 @@ class DashboardActivity : AppCompatActivity() {
             allCards.isEnabled = true
             val card = cards[0]
             val view = layoutInflater.inflate(R.layout.card_item, anyCardContainer, false)
-            view.findViewById<TextView>(R.id.card_type_and_name).text = "${card.type}: ${card.name}"
-            view.findViewById<TextView>(R.id.card_balance).text = String.format("%,.0f $", card.balance)
+            view.findViewById<TextView>(R.id.card_type_and_name).text = "Card name: ${card.name}"
+
+            val currencySymbol = currencySymbolMap[card.currency]
+            val formattedBalance = String.format("%,.0f", card.balance)
+            view.findViewById<TextView>(R.id.card_balance).text = "$formattedBalance $currencySymbol"
             view.findViewById<ImageView>(R.id.card_icon).setImageResource(R.drawable.card)
             anyCardContainer.addView(view)
         }

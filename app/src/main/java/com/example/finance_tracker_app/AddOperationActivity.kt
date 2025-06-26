@@ -20,11 +20,11 @@ import androidx.appcompat.app.AlertDialog
 import java.util.*
 import androidx.appcompat.app.AppCompatDelegate
 import android.content.Context
+import com.example.finance_tracker_app.AddCardActivity.Card
+
 
 
 class AddOperationActivity : AppCompatActivity() {
-
-    data class Card(val type: String, val name: String, val balance: Double)
 
     private lateinit var transactionTypeSpinner: Spinner
     private lateinit var selectAccountSpinner: Spinner
@@ -32,6 +32,7 @@ class AddOperationActivity : AppCompatActivity() {
     private lateinit var dateInput: EditText
     private lateinit var backArrow: ImageButton
     private lateinit var addOperation: Button
+    private lateinit var currencySymbolView: TextView
 
     private val gson = Gson()
     private var cardsList: List<Card> = emptyList()
@@ -68,6 +69,8 @@ class AddOperationActivity : AppCompatActivity() {
         selectCategorySpinner = findViewById(R.id.select_category_spinner)
         backArrow = findViewById(R.id.back_arrow)
         addOperation = findViewById(R.id.add_operation)
+        currencySymbolView = findViewById(R.id.currency)
+
 
         db = AppDatabase.getDatabase(this)
         operationDao = db.operationDao()
@@ -117,10 +120,12 @@ class AddOperationActivity : AppCompatActivity() {
         }
 
         fun proceedSaving() {
+
             val operation = Operation(
                 type = type,
                 amount = amount,
                 accountName = accountName,
+                currency = selectedCard.currency.toString(),
                 category = category,
                 date = selectedDateMillis,
                 note = if (note.isBlank()) null else note
@@ -202,12 +207,46 @@ class AddOperationActivity : AppCompatActivity() {
     }
 
     private fun setupSelectAccountSpinner() {
+        val currencySymbolMap = mapOf(
+            "USD" to "$",
+            "EUR" to "€",
+            "GBP" to "£",
+            "JPY" to "¥",
+            "CNY" to "¥",
+            "RUB" to "₽",
+            "INR" to "₹",
+            "AUD" to "A$",
+            "CAD" to "C$",
+            "CHF" to "₣",
+            "TRY" to "₺"
+        )
+
         val accountNames = mutableListOf("Select account")
         accountNames.addAll(cardsList.map { it.name })
+
         val adapter = createStyledSpinnerAdapter(accountNames)
         selectAccountSpinner.adapter = adapter
         selectAccountSpinner.setSelection(0)
+
+        val currencyTextView = findViewById<TextView>(R.id.currency)
+
+        selectAccountSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                if (position == 0) {
+                    currencyTextView.text = "?"
+                } else {
+                    val selectedCardName = parent.getItemAtPosition(position).toString()
+                    val selectedCard = cardsList.find { it.name == selectedCardName }
+
+                    val symbol = currencySymbolMap[selectedCard?.currency] ?: selectedCard?.currency ?: "?"
+                    currencyTextView.text = symbol
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
     }
+
 
     private fun loadUserCategories() {
         val prefs = getEncryptedPrefs()

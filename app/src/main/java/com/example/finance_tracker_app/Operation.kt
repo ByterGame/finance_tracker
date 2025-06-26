@@ -9,6 +9,7 @@ data class Operation(
     val type: String,
     val amount: Double,
     val accountName: String,
+    val currency: String,
     val category: String,
     val date: Long,
     val note: String?

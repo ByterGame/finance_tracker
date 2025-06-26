@@ -4,6 +4,7 @@
     package="com.example.finance_tracker_app">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -16,9 +17,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Finance_tracker_app"
         tools:targetApi="31">
-        <activity
-            android:name=".ExchangeRatesActivity"
-            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

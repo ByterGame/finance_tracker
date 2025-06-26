@@ -6,4 +6,15 @@
     <string name="title_activity_all_cards">AllCardsActivity</string>
     <string name="title_activity_add_category">AddCategoryActivity</string>
     <string name="warning_clean">This action will result in complete deletion of data, including on remote servers.</string>
+    <string name="currency_usd">US Dollar</string>
+    <string name="currency_eur">Euro</string>
+    <string name="currency_gbp">British Pound</string>
+    <string name="currency_jpy">Japanese Yen</string>
+    <string name="currency_cny">Chinese Yuan</string>
+    <string name="currency_rub">Russian Ruble</string>
+    <string name="currency_inr">Indian Rupee</string>
+    <string name="currency_aud">Australian Dollar</string>
+    <string name="currency_cad">Canadian Dollar</string>
+    <string name="currency_chf">Swiss Franc</string>
+    <string name="currency_try">Turkish Lira</string>
 </resources>

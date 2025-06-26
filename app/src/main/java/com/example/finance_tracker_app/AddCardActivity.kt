@@ -24,7 +24,7 @@ import com.example.finance_tracker_app.utils.CardStorage
 
 class AddCardActivity : AppCompatActivity() {
 
-    data class Card(val type: String, val name: String, val balance: Double)
+    data class Card(val name: String, val balance: Double, val currency: String?)
 
 
     private lateinit var spinner: Spinner
@@ -35,8 +35,34 @@ class AddCardActivity : AppCompatActivity() {
 
 
     private val gson = Gson()
-    private val cardTypes = listOf("Debit card", "Savings account", "Brokerage account")
-    private var selectedCardType = cardTypes[0]
+    private val currencyNameResMap = mapOf(
+        "USD" to R.string.currency_usd,
+        "EUR" to R.string.currency_eur,
+        "GBP" to R.string.currency_gbp,
+        "JPY" to R.string.currency_jpy,
+        "CNY" to R.string.currency_cny,
+        "RUB" to R.string.currency_rub,
+        "INR" to R.string.currency_inr,
+        "AUD" to R.string.currency_aud,
+        "CAD" to R.string.currency_cad,
+        "CHF" to R.string.currency_chf,
+        "TRY" to R.string.currency_try
+    )
+    private val currencySymbolMap = mapOf(
+        "USD" to "$",
+        "EUR" to "€",
+        "GBP" to "£",
+        "JPY" to "¥",
+        "CNY" to "¥",
+        "RUB" to "₽",
+        "INR" to "₹",
+        "AUD" to "A$",
+        "CAD" to "C$",
+        "CHF" to "₣",
+        "TRY" to "₺"
+    )
+
+    private var selectedCurrency = "USD"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -47,7 +73,7 @@ class AddCardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.add_card_layout)
 
-        spinner = findViewById(R.id.cardTypeSpinner)
+        spinner = findViewById(R.id.cardCurrencySpinner)
         nameInput = findViewById(R.id.name_card_input)
         addButton = findViewById(R.id.add_bank_account)
         balanceInput = findViewById(R.id.card_balance)
@@ -58,7 +84,7 @@ class AddCardActivity : AppCompatActivity() {
         }
 
         setupBalanceFormatting()
-        setupSpinner()
+        setupCurrencySpinner()
         setupAddButton()
     }
 
@@ -114,17 +140,20 @@ class AddCardActivity : AppCompatActivity() {
     }
 
 
-    private fun setupSpinner() {
+    private fun setupCurrencySpinner() {
+        val currencyCodes = currencyNameResMap.keys.toList()
+        val currencyDisplayNames = currencyCodes.map { getString(currencyNameResMap[it]!!) }
+
         val adapter = object : ArrayAdapter<String>(
             this,
             R.layout.spinner_item,
-            cardTypes
+            currencyDisplayNames
         ) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 val view = convertView ?: LayoutInflater.from(context)
                     .inflate(R.layout.spinner_item, parent, false)
                 val textView = view.findViewById<TextView>(R.id.spinnerText)
-                textView.text = "Type: ${getItem(position)}"
+                textView.text = "Currency: ${getItem(position)}"
                 return view
             }
 
@@ -146,12 +175,16 @@ class AddCardActivity : AppCompatActivity() {
                 position: Int,
                 id: Long
             ) {
-                selectedCardType = cardTypes[position]
+                selectedCurrency = currencyCodes[position]
+                val currencySymbol = currencySymbolMap[selectedCurrency] ?: selectedCurrency
+                val currencyTextView = findViewById<TextView>(R.id.currency)
+                currencyTextView.text = currencySymbol
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
     }
+
 
     private fun setupAddButton() {
         addButton.setOnClickListener {
@@ -162,11 +195,18 @@ class AddCardActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val fullCardName = nameInput.text.toString().trim()
             val balanceString = balanceInput.text.toString().replace(",", "")
             val balance = balanceString.toDoubleOrNull() ?: 0.0
+
             val savedCards = CardStorage.loadSavedCards(this).toMutableList()
-            savedCards.add(Card(type = selectedCardType, name = fullCardName, balance = balance))
+
+            val newCard = Card(
+                name = name,
+                balance = balance,
+                currency = selectedCurrency
+            )
+
+            savedCards.add(newCard)
             CardStorage.saveCards(this, savedCards)
 
             Toast.makeText(this, "Card saved", Toast.LENGTH_SHORT).show()
@@ -176,4 +216,5 @@ class AddCardActivity : AppCompatActivity() {
             finish()
         }
     }
+
 }

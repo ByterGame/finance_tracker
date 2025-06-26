@@ -15,7 +15,7 @@ class MainActivity : AppCompatActivity() {
         val hasPinCode = checkIfPinExists()
 
         val nextIntent = if (hasPinCode) {
-            Intent(this, ExchangeRatesActivity::class.java) // EnterPassCode
+            Intent(this, EnterPassCode::class.java)
         } else {
             Intent(this, Registration::class.java)
         }
