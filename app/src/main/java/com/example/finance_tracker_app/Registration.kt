@@ -149,6 +149,36 @@ class Registration : AppCompatActivity() {
                         saveName(name)
                         Toast.makeText(this@Registration, "Проверка прошла успешно!", Toast.LENGTH_SHORT).show()
                         val intent = Intent(this@Registration, SetUpPassCode::class.java)
+                        val masterKey = MasterKey.Builder(applicationContext)
+                            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                            .build()
+
+                        val sharedPreferences = EncryptedSharedPreferences.create(
+                            applicationContext,
+                            "secure_prefs",
+                            masterKey,
+                            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                        )
+                        sharedPreferences.edit().putString("user_email", email).apply()
+
+                        val api = RetrofitClient.instance
+                        val request = EmailRequest(emailField.text.toString())
+
+                        api.registerUser(request).enqueue(object : Callback<ResponseBody> {
+                            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                                if (response.isSuccessful) {
+                                    Toast.makeText(this@Registration, "Email зарегистрирован", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(this@Registration, "Ошибка регистрации", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+
+                            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                                Toast.makeText(this@Registration, "Сбой запроса", Toast.LENGTH_SHORT).show()
+                            }
+                        })
+                        
                         startActivity(intent)
                         finish()
                     } else {

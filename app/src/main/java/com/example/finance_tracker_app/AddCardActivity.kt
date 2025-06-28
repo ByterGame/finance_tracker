@@ -19,7 +19,12 @@ import java.text.DecimalFormatSymbols
 import java.util.Locale
 import androidx.appcompat.app.AppCompatDelegate
 import android.content.Context
+import android.util.Log
+import com.example.finance_tracker_app.AddOperationActivity
 import com.example.finance_tracker_app.utils.CardStorage
+import okhttp3.ResponseBody
+import retrofit2.Call
+
 
 
 class AddCardActivity : AppCompatActivity() {
@@ -209,6 +214,29 @@ class AddCardActivity : AppCompatActivity() {
             savedCards.add(newCard)
             CardStorage.saveCards(this, savedCards)
 
+            val email = getUserEmail(this@AddCardActivity)
+
+            val cardRequest = CardRequest(
+                userEmail = email.toString(),
+                name = newCard.name,
+                balance = newCard.balance,
+                currency = newCard.currency.toString()
+            )
+            RetrofitClient.instance.saveCard(cardRequest)
+                .enqueue(object : retrofit2.Callback<ResponseBody> {
+                    override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                        if (response.isSuccessful) {
+                            Log.d("AddCard", "Card synced to backend")
+                        } else {
+                            Log.e("AddCard", "Failed to sync card: ${response.code()}")
+                        }
+                    }
+
+                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                        Log.e("AddCard", "Network error syncing operation", t)
+                    }
+                })
+
             Toast.makeText(this, "Card saved", Toast.LENGTH_SHORT).show()
             nameInput.text.clear()
 
@@ -217,4 +245,23 @@ class AddCardActivity : AppCompatActivity() {
         }
     }
 
+    fun getUserEmail(context: Context): String? {
+        return try {
+            val masterKey = MasterKey.Builder(context)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+
+            val sharedPreferences = EncryptedSharedPreferences.create(
+                context,
+                "secure_prefs",
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+            sharedPreferences.getString("user_email", null)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getString("user_email", null)
+        }
+    }
 }

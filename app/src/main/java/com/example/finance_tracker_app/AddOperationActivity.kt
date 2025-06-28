@@ -20,8 +20,10 @@ import androidx.appcompat.app.AlertDialog
 import java.util.*
 import androidx.appcompat.app.AppCompatDelegate
 import android.content.Context
+import android.util.Log
 import com.example.finance_tracker_app.AddCardActivity.Card
-
+import okhttp3.ResponseBody
+import retrofit2.Call
 
 
 class AddOperationActivity : AppCompatActivity() {
@@ -137,6 +139,32 @@ class AddOperationActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 try {
                     operationDao.insertOperation(operation)
+                    val email = getUserEmail(this@AddOperationActivity)
+
+                    val operationRequest = OperationRequest(
+                        userEmail = email.toString(),
+                        type = type,
+                        amount = amount,
+                        accountName = accountName,
+                        currency = selectedCard.currency.toString(),
+                        category = category,
+                        date = selectedDateMillis,
+                        note = if (note.isBlank()) null else note
+                    )
+                    RetrofitClient.instance.saveOperation(operationRequest)
+                        .enqueue(object : retrofit2.Callback<ResponseBody> {
+                            override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                                if (response.isSuccessful) {
+                                    Log.d("AddOperation", "Operation synced to backend")
+                                } else {
+                                    Log.e("AddOperation", "Failed to sync operation: ${response.code()}")
+                                }
+                            }
+
+                            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                                Log.e("AddOperation", "Network error syncing operation", t)
+                            }
+                        })
                     runOnUiThread {
                         Toast.makeText(this@AddOperationActivity, "Operation saved", Toast.LENGTH_SHORT).show()
                         startActivity(Intent(this@AddOperationActivity, DashboardActivity::class.java))
@@ -160,6 +188,26 @@ class AddOperationActivity : AppCompatActivity() {
                 .show()
         } else {
             proceedSaving()
+        }
+    }
+
+    fun getUserEmail(context: Context): String? {
+        return try {
+            val masterKey = MasterKey.Builder(context)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+
+            val sharedPreferences = EncryptedSharedPreferences.create(
+                context,
+                "secure_prefs",
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+            sharedPreferences.getString("user_email", null)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getString("user_email", null)
         }
     }
 

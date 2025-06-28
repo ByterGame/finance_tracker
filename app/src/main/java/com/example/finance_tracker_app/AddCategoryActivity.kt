@@ -15,6 +15,12 @@ import com.jaredrummler.android.colorpicker.ColorPickerDialog
 import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
 import androidx.appcompat.app.AppCompatDelegate
 import android.content.Context
+import android.util.Log
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
+import com.example.finance_tracker_app.AddOperationActivity
+import okhttp3.ResponseBody
+import retrofit2.Call
 
 data class Category(val name: String, val color: Int)
 
@@ -86,7 +92,48 @@ class AddCategoryActivity : AppCompatActivity(), ColorPickerDialogListener {
         
         if (currentCategories.none { it.name == categoryName }) {
             currentCategories.add(Category(categoryName, selectedColor))
+
+            val email = getUserEmail(this@AddCategoryActivity)
+            Log.d("email", email.toString())
+            val categoryRequest = CategoryRequest(
+                userEmail = email.toString(),
+                name = categoryName,
+                color = selectedColor
+            )
+            RetrofitClient.instance.saveCategory(categoryRequest)
+                .enqueue(object : retrofit2.Callback<ResponseBody> {
+                    override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                        if (response.isSuccessful) {
+                            Log.d("AddCategory", "Category synced to backend")
+                        } else {
+                            Log.e("AddCategory", "Failed to sync Category: ${response.code()}")
+                        }
+                    }
+
+                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                        Log.e("AddCategory", "Network error syncing operation", t)
+                    }
+                })
             prefs.edit().putString("categories_list", gson.toJson(currentCategories)).apply()
+        }
+    }
+    fun getUserEmail(context: Context): String? {
+        return try {
+            val masterKey = MasterKey.Builder(context)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+
+            val sharedPreferences = EncryptedSharedPreferences.create(
+                context,
+                "secure_prefs",
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+            sharedPreferences.getString("user_email", null)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getString("user_email", null)
         }
     }
 }

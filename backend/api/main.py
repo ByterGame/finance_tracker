@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel, EmailStr
 import random
 import smtplib
@@ -7,8 +7,14 @@ import os
 from dotenv import load_dotenv
 from email.mime.text import MIMEText
 import smtplib
+from sqlalchemy.orm import Session
+from . import models
+from .database import SessionLocal, engine
+from datetime import datetime
 
 load_dotenv()
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -58,3 +64,98 @@ def verify_code(request: CodeVerificationRequest):
         return {"message": "Verified"}
     else:
         raise HTTPException(status_code=400, detail="Invalid code")
+    
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+class EmailRequest(BaseModel):
+    email: EmailStr
+
+@app.post("/register_user")
+def register_user(request: EmailRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == request.email).first()
+    if user:
+        return { "message": "Пользователь уже зарегистрирован" }
+    
+    new_user = models.User(email=request.email)
+    db.add(new_user)
+    db.commit()
+    return { "message": "Пользователь успешно зарегистрирован" }
+
+class OperationRequest(BaseModel):
+    userEmail: EmailStr
+    type: str
+    amount: float
+    accountName: str
+    currency: str
+    category: str
+    date: int
+    note: str | None = None
+
+@app.post("/save_operation")
+def save_operation(request: OperationRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == request.userEmail).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    operation = models.Operation(
+        userEmail=request.userEmail,
+        type=request.type,
+        amount=request.amount,
+        accountName=request.accountName,
+        currency=request.currency,
+        category=request.category,
+        date=datetime.fromtimestamp(request.date / 1000.0),
+        note=request.note
+    )
+    db.add(operation)
+    db.commit()
+    return {"message": "Operation saved"}
+
+
+class CardRequest(BaseModel):
+    userEmail: EmailStr
+    name: str
+    balance: float
+    currency: str
+
+@app.post("/save_card")
+def save_card(request: CardRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == request.userEmail).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    card = models.Card(
+        userEmail=request.userEmail,
+        name=request.name,
+        balance=request.balance,
+        currency=request.currency
+    )
+    db.add(card)
+    db.commit()
+    return {"message": "Card saved"}
+
+class CategoryRequest(BaseModel):
+    userEmail: EmailStr
+    name: str
+    color: int
+
+@app.post("/save_category")
+def save_category(request: CategoryRequest,  db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == request.userEmail).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    category = models.Category(
+        userEmail=request.userEmail,
+        name=request.name,
+        color=request.color
+    )
+    db.add(category)
+    db.commit()
+    return {"message": "Category saved"}
