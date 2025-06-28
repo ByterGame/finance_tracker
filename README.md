@@ -17,9 +17,9 @@ To ensure proper operation of code verification, you need to separately run the 
 1. Navigate to the backend directory:
 
 ```bash
-cd backend/api/
+cd backend
 ```
 2. Start the server using Uvicorn:
 ```bash
-uvicorn main:app --reload
+uvicorn api/main:app --reload
 ```
