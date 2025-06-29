@@ -1,75 +1,24 @@
-from fastapi import FastAPI, HTTPException, Depends
-from pydantic import BaseModel, EmailStr
 import random
-import smtplib
-from email.mime.text import MIMEText
-import os
-from dotenv import load_dotenv
-from email.mime.text import MIMEText
-import smtplib
+from datetime import datetime
+import logging
+
+from fastapi import FastAPI, HTTPException, Depends, Request, Query
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from pydantic import EmailStr
+
 from . import models
 from .database import SessionLocal, engine
-from datetime import datetime
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from typing import List, Optional
-from fastapi import Query
+from . import schemas
+from .services import email
 
-load_dotenv()
 
 models.Base.metadata.create_all(bind=engine)
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 app = FastAPI()
-
-email_codes = {}
-
-class EmailRequest(BaseModel):
-    email: EmailStr
-
-class CodeVerificationRequest(BaseModel):
-    email: EmailStr
-    code: str
-
-def send_email(to_email: str, code: str):
-    smtp_server = "smtp.gmail.com"
-    smtp_port = 587
-    sender_email = os.getenv("SMTP_EMAIL")
-    sender_password = os.getenv("SMTP_PASSWORD")
-
-    msg = MIMEText(f"<b>Your code:</b> {code}", "html")
-    msg["Subject"] = "Verification Code"
-    msg["From"] = sender_email
-    msg["To"] = to_email
-
-    try:
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.starttls()
-            server.login(sender_email, sender_password)
-            server.send_message(msg)
-    except smtplib.SMTPException as e:
-        print("Ошибка отправки письма:", e)
-
-@app.post("/send_code")
-def send_code(request: EmailRequest):
-    code = str(random.randint(100000, 999999))
-    email_codes[request.email] = code
-
-    try:
-        send_email(request.email, code)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to send email: {e}")
-
-    return {"message": "Code sent"}
-
-@app.post("/verify_code")
-def verify_code(request: CodeVerificationRequest):
-    if email_codes.get(request.email) == request.code:
-        return {"message": "Verified"}
-    else:
-        raise HTTPException(status_code=400, detail="Invalid code")
-    
 
 def get_db():
     db = SessionLocal()
@@ -78,11 +27,32 @@ def get_db():
     finally:
         db.close()
 
-class EmailRequest(BaseModel):
-    email: EmailStr
+
+email_codes = {}
+
+@app.post("/send_code")
+def send_code(request: schemas.EmailRequest):
+    code = str(random.randint(100000, 999999))
+    email_codes[request.email] = code
+
+    try:
+        email.send_email(request.email, code)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {e}")
+
+    return {"message": "Code sent"}
+
+
+@app.post("/verify_code")
+def verify_code(request: schemas.CodeVerificationRequest):
+    if email_codes.get(request.email) == request.code:
+        return {"message": "Verified"}
+    else:
+        raise HTTPException(status_code=400, detail="Invalid code")   
+    
 
 @app.post("/register_user")
-def register_user(request: EmailRequest, db: Session = Depends(get_db)):
+def register_user(request: schemas.EmailRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == request.email).first()
     if user:
         return JSONResponse(
@@ -95,18 +65,9 @@ def register_user(request: EmailRequest, db: Session = Depends(get_db)):
     db.commit()
     return { "message": "Пользователь успешно зарегистрирован" }
 
-class OperationRequest(BaseModel):
-    userEmail: EmailStr
-    type: str
-    amount: float
-    accountName: str
-    currency: str
-    category: str
-    date: int
-    note: str | None = None
 
 @app.post("/save_operation")
-def save_operation(request: OperationRequest, db: Session = Depends(get_db)):
+def save_operation(request: schemas.OperationRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == request.userEmail).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -141,14 +102,8 @@ def save_operation(request: OperationRequest, db: Session = Depends(get_db)):
     return {"message": "Operation saved"}
 
 
-class CardRequest(BaseModel):
-    userEmail: EmailStr
-    name: str
-    balance: float
-    currency: str
-
 @app.post("/save_card")
-def save_card(request: CardRequest, db: Session = Depends(get_db)):
+def save_card(request: schemas.CardRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == request.userEmail).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -163,13 +118,9 @@ def save_card(request: CardRequest, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Card saved"}
 
-class CategoryRequest(BaseModel):
-    userEmail: EmailStr
-    name: str
-    color: int
 
 @app.post("/save_category")
-def save_category(request: CategoryRequest,  db: Session = Depends(get_db)):
+def save_category(request: schemas.CategoryRequest,  db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == request.userEmail).first()
     
     if not user:
@@ -186,7 +137,7 @@ def save_category(request: CategoryRequest,  db: Session = Depends(get_db)):
 
 
 @app.post("/delete_user_data")
-def delete_user_data(request: EmailRequest, db: Session = Depends(get_db)):
+def delete_user_data(request: schemas.EmailRequest, db: Session = Depends(get_db)):
     print(f"Received delete request for {request.email}")
     user = db.query(models.User).filter(models.User.email == request.email).first()
     if not user:
@@ -200,37 +151,8 @@ def delete_user_data(request: EmailRequest, db: Session = Depends(get_db)):
 
     return {"message": "User data deleted successfully"}
 
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    print(f"Incoming request: {request.method} {request.url}")
-    response = await call_next(request)
-    return response
 
-
-class OperationOut(BaseModel):
-    type: str
-    amount: float
-    accountName: str
-    currency: str
-    category: str
-    date: int
-    note: Optional[str]
-
-class CardOut(BaseModel):
-    name: str
-    balance: float
-    currency: str
-
-class CategoryOut(BaseModel):
-    name: str
-    color: int
-
-class UserDataResponse(BaseModel):
-    cards: List[CardOut]
-    categories: List[CategoryOut]
-    operations: List[OperationOut]
-
-@app.get("/get_user_data", response_model=UserDataResponse)
+@app.get("/get_user_data", response_model=schemas.UserDataResponse)
 def get_user_data(email: EmailStr = Query(...), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == email).first()
     if not user:
@@ -258,6 +180,12 @@ def get_user_data(email: EmailStr = Query(...), db: Session = Depends(get_db)):
             } for op in operations
         ]
     }
-    print(data)
     return data
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f"Incoming request: {request.method} {request.url}")
+    response = await call_next(request)
+    return response
     
