@@ -74,7 +74,7 @@ class Registration : AppCompatActivity() {
                     )
 
                     if (!isValid && email.isNotEmpty()) {
-                        emailLayout.error = "Некорректный email"
+                        emailLayout.error = "Incorrect email"
                         emailLayout.setErrorEnabled(true)
                     } else {
                         emailLayout.error = null
@@ -92,7 +92,7 @@ class Registration : AppCompatActivity() {
 
             val name = nameField.text.toString().trim()
             if (name.isEmpty()) {
-                nameField.error = "Введите имя"
+                nameField.error = "Enter name"
                 return@setOnClickListener
             }
 
@@ -112,17 +112,18 @@ class Registration : AppCompatActivity() {
             sendButton.isEnabled = false
             sendButton.setBackgroundTintList(getColorStateList(R.color.primary_light))
             sendButton.text = "Sending..."
+
             val request = EmailRequest(email)
             RetrofitClient.instance.sendCode(request).enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                     if (response.isSuccessful) {
-                        Toast.makeText(this@Registration, "Код отправлен!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@Registration, "Code sent!", Toast.LENGTH_SHORT).show()
                         sendButton.text = "Change email"
                         sendButton.isEnabled = true
                         verifyButton.isEnabled = true
                         verifyButton.setBackgroundTintList(getColorStateList(R.color.primary_color))
                     } else {
-                        Toast.makeText(this@Registration, "Ошибка отправки кода", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@Registration, "Error sending code", Toast.LENGTH_SHORT).show()
                         sendButton.isEnabled = true
                         sendButton.text = "Send code"
                         emailField.isEnabled = true
@@ -130,7 +131,7 @@ class Registration : AppCompatActivity() {
                 }
 
                 override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                    Toast.makeText(this@Registration, "Ошибка: ${t.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@Registration, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
                     sendButton.isEnabled = true
                     emailField.isEnabled = true
                     sendButton.text = "Send code"
@@ -142,8 +143,8 @@ class Registration : AppCompatActivity() {
             val email = emailField.text.toString().trim()
             val code = codeField.text.toString().trim()
 
-            if (email.isEmpty() || code.isEmpty()) {
-                Toast.makeText(this, "Введите email и код", Toast.LENGTH_SHORT).show()
+            if (code.toString().length < 6) {
+                Toast.makeText(this, "Enter the six-digit code", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -153,46 +154,45 @@ class Registration : AppCompatActivity() {
                     if (response.isSuccessful) {
                         val name = nameField.text.toString().trim()
                         saveName(name)
-                        Toast.makeText(this@Registration, "Проверка прошла успешно!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@Registration, "The test was successful!", Toast.LENGTH_SHORT).show()
                         saveEmailSecurely(email)
 
-                        val api = RetrofitClient.instance
                         val request = EmailRequest(emailField.text.toString())
 
-                        api.registerUser(request).enqueue(object : Callback<ResponseBody> {
+                        RetrofitClient.instance.registerUser(request).enqueue(object : Callback<ResponseBody> {
                             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                                 if (response.code() == 201 || response.code() == 200) {
                                     Log.d("Code 200||201", response.code().toString())
-                                    Toast.makeText(this@Registration, "Email зарегистрирован", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(this@Registration, "email registered", Toast.LENGTH_SHORT).show()
                                     startActivity(Intent(this@Registration, SetUpPassCode::class.java))
                                     finish()
                                 } else if (response.code() == 409) {
                                     Log.d("Code 409", email)
                                     showRestoreDialog(email)
                                 } else {
-                                    Toast.makeText(this@Registration, "Ошибка регистрации", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(this@Registration, "Registration error", Toast.LENGTH_SHORT).show()
                                 }
                             }
 
                             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                                Toast.makeText(this@Registration, "Сбой запроса", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this@Registration, "request failed", Toast.LENGTH_SHORT).show()
                             }
                         })
 
 
                     } else {
-                        Toast.makeText(this@Registration, "Неверный код", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@Registration, "Invalid code", Toast.LENGTH_SHORT).show()
                     }
                 }
 
                 override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                    Toast.makeText(this@Registration, "Ошибка: ${t.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@Registration, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
                 }
             })
         }
 
-        val skip_registration_button = findViewById<TextView>(R.id.skip_registration)
-        skip_registration_button.setOnClickListener {
+        val skipRegistrationButton = findViewById<TextView>(R.id.skip_registration)
+        skipRegistrationButton.setOnClickListener {
             startActivity(Intent(this@Registration, SetUpPassCode::class.java))
             finish()
         }
@@ -218,12 +218,12 @@ class Registration : AppCompatActivity() {
                         }
 
                         AlertDialog.Builder(this@Registration)
-                            .setTitle("Восстановить данные?")
-                            .setMessage("Найдено ранее сохранённые данные. Хотите восстановить их?")
-                            .setPositiveButton("Да") { _, _ ->
+                            .setTitle("Recover data?")
+                            .setMessage("Previously saved data found. Do you want to restore it?")
+                            .setPositiveButton("Yes") { _, _ ->
                                 restoreDataLocally(data)
                             }
-                            .setNegativeButton("Нет") { _, _ ->
+                            .setNegativeButton("No") { _, _ ->
                                 clearRemoteData(email)
                                 startActivity(Intent(this@Registration, SetUpPassCode::class.java))
                                 finish()
@@ -233,7 +233,7 @@ class Registration : AppCompatActivity() {
                 }
 
                 override fun onFailure(call: Call<UserDataResponse>, t: Throwable) {
-                    Log.e("RestoreDialog", "Ошибка загрузки данных", t)
+                    Log.e("RestoreDialog", "Error loading data", t)
                 }
             })
     }
@@ -266,7 +266,7 @@ class Registration : AppCompatActivity() {
                 )
             }
             operationDao.insertAll(operations)
-            Toast.makeText(this@Registration, "Данные восстановлены", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@Registration, "Data restored", Toast.LENGTH_SHORT).show()
         }
         startActivity(Intent(this@Registration, SetUpPassCode::class.java))
         finish()
@@ -279,16 +279,16 @@ class Registration : AppCompatActivity() {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if (response.isSuccessful) {
                     saveEmailSecurely(email)
-                    Toast.makeText(this@Registration, "Данные удалены, начнём с чистого листа", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@Registration, "Data deleted, let's start from scratch", Toast.LENGTH_SHORT).show()
                     startActivity(Intent(this@Registration, SetUpPassCode::class.java))
                     finish()
                 } else {
-                    Toast.makeText(this@Registration, "Не удалось удалить данные", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@Registration, "Failed to delete data", Toast.LENGTH_SHORT).show()
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Toast.makeText(this@Registration, "Ошибка: ${t.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@Registration, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }

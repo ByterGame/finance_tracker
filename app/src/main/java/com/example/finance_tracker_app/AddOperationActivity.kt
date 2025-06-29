@@ -41,6 +41,9 @@ class AddOperationActivity : AppCompatActivity() {
     private var userCategories: MutableList<String> = mutableListOf()
     private lateinit var db: AppDatabase
     private lateinit var operationDao: OperationDao
+    private val pendingOperationDao by lazy {
+        AppDatabase.getDatabase(this).pendingOperationDao()
+    }
 
     private var selectedDateMillis: Long = System.currentTimeMillis()
 
@@ -76,6 +79,7 @@ class AddOperationActivity : AppCompatActivity() {
 
         db = AppDatabase.getDatabase(this)
         operationDao = db.operationDao()
+
 
         setupAddOperation()
         setupBackArrow()
@@ -158,11 +162,22 @@ class AddOperationActivity : AppCompatActivity() {
                                     Log.d("AddOperation", "Operation synced to backend")
                                 } else {
                                     Log.e("AddOperation", "Failed to sync operation: ${response.code()}")
+                                    lifecycleScope.launch {
+                                        val gson = Gson()
+                                        val json = gson.toJson(operationRequest)
+                                        pendingOperationDao.insert(PendingOperation(operationJson = json))
+                                    }
                                 }
                             }
 
                             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                                 Log.e("AddOperation", "Network error syncing operation", t)
+
+                                lifecycleScope.launch {
+                                    val gson = Gson()
+                                    val json = gson.toJson(operationRequest)
+                                    pendingOperationDao.insert(PendingOperation(operationJson = json))
+                                }
                             }
                         })
                     runOnUiThread {

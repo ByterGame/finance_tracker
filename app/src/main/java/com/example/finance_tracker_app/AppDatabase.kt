@@ -5,9 +5,10 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import android.content.Context
 
-@Database(entities = [Operation::class], version = 2)
+@Database(entities = [Operation::class, PendingOperation::class], version = 4)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun operationDao(): OperationDao
+    abstract fun pendingOperationDao(): PendingOperationDao
 
     companion object {
         @Volatile
@@ -19,7 +20,7 @@ abstract class AppDatabase : RoomDatabase() {
                                 context.applicationContext,
                                 AppDatabase::class.java,
                                 "finance_tracker_database"
-                            ).fallbackToDestructiveMigration(false)
+                            ).fallbackToDestructiveMigration(true)
                 .build()
                 INSTANCE = instance
                 instance

@@ -1,17 +1,29 @@
 package com.example.finance_tracker_app
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.google.gson.Gson
+import kotlinx.coroutines.launch
+import okhttp3.ResponseBody
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.IOException
 import java.security.GeneralSecurityException
+
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        lifecycleScope.launch {
+            retryPendingOperations(this@MainActivity)
+        }
         val hasPinCode = checkIfPinExists()
 
         val nextIntent = if (hasPinCode) {
@@ -48,4 +60,37 @@ class MainActivity : AppCompatActivity() {
             false
         }
     }
+
+    suspend fun retryPendingOperations(context: Context) {
+        val dao = AppDatabase.getDatabase(context).pendingOperationDao()
+        val list = dao.getAll()
+
+        if (list.isEmpty()) {
+            Log.d("RetryOperation", "No pending operations to sync")
+            return
+        }
+
+        val gson = Gson()
+
+        list.forEach { pending ->
+            val request = gson.fromJson(pending.operationJson, OperationRequest::class.java)
+
+            RetrofitClient.instance.saveOperation(request)
+                .enqueue(object : Callback<ResponseBody> {
+                    override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                        if (response.isSuccessful) {
+                            lifecycleScope.launch {
+                                dao.delete(pending)
+                                Log.d("RetryOperation", "Successfully synced pending operation")
+                            }
+                        }
+                    }
+
+                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                        Log.e("RetryOperation", "Still failed to sync pending operation", t)
+                    }
+                })
+        }
+    }
+
 }
