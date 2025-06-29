@@ -11,6 +11,11 @@ from sqlalchemy.orm import Session
 from . import models
 from .database import SessionLocal, engine
 from datetime import datetime
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from typing import List, Optional
+from fastapi import Query
 
 load_dotenv()
 
@@ -80,7 +85,10 @@ class EmailRequest(BaseModel):
 def register_user(request: EmailRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == request.email).first()
     if user:
-        return { "message": "Пользователь уже зарегистрирован" }
+        return JSONResponse(
+            status_code=409,
+            content={ "message": "Пользователь уже зарегистрирован" }
+        )
     
     new_user = models.User(email=request.email)
     db.add(new_user)
@@ -102,6 +110,22 @@ def save_operation(request: OperationRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == request.userEmail).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    card = db.query(models.Card).filter(
+        models.Card.userEmail == request.userEmail,
+        models.Card.name == request.accountName
+    ).first()
+
+    if not card:
+        raise HTTPException(status_code=404, detail="Card not found")
+
+    if request.type == "Income":
+        card.balance += request.amount
+    elif request.type == "Expense":
+        card.balance -= request.amount
+    else:
+        raise HTTPException(status_code=400, detail="Invalid operation type")
+    
     operation = models.Operation(
         userEmail=request.userEmail,
         type=request.type,
@@ -159,3 +183,81 @@ def save_category(request: CategoryRequest,  db: Session = Depends(get_db)):
     db.add(category)
     db.commit()
     return {"message": "Category saved"}
+
+
+@app.post("/delete_user_data")
+def delete_user_data(request: EmailRequest, db: Session = Depends(get_db)):
+    print(f"Received delete request for {request.email}")
+    user = db.query(models.User).filter(models.User.email == request.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    db.query(models.Operation).filter(models.Operation.userEmail == request.email).delete()
+    db.query(models.Card).filter(models.Card.userEmail == request.email).delete()
+    db.query(models.Category).filter(models.Category.userEmail == request.email).delete()
+
+    db.commit()
+
+    return {"message": "User data deleted successfully"}
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    print(f"Incoming request: {request.method} {request.url}")
+    response = await call_next(request)
+    return response
+
+
+class OperationOut(BaseModel):
+    type: str
+    amount: float
+    accountName: str
+    currency: str
+    category: str
+    date: int
+    note: Optional[str]
+
+class CardOut(BaseModel):
+    name: str
+    balance: float
+    currency: str
+
+class CategoryOut(BaseModel):
+    name: str
+    color: int
+
+class UserDataResponse(BaseModel):
+    cards: List[CardOut]
+    categories: List[CategoryOut]
+    operations: List[OperationOut]
+
+@app.get("/get_user_data", response_model=UserDataResponse)
+def get_user_data(email: EmailStr = Query(...), db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    cards = db.query(models.Card).filter(models.Card.userEmail == email).all()
+    categories = db.query(models.Category).filter(models.Category.userEmail == email).all()
+    operations = db.query(models.Operation).filter(models.Operation.userEmail == email).all()
+    data = {
+        "cards": [
+            {"name": c.name, "balance": c.balance, "currency": c.currency} for c in cards
+        ],
+        "categories": [
+            {"name": cat.name, "color": cat.color} for cat in categories
+        ],
+        "operations": [
+            {
+                "type": op.type,
+                "amount": op.amount,
+                "accountName": op.accountName,
+                "currency": op.currency,
+                "category": op.category,
+                "date": int(op.date.timestamp() * 1000),
+                "note": op.note
+            } for op in operations
+        ]
+    }
+    print(data)
+    return data
+    

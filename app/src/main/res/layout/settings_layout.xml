@@ -111,6 +111,28 @@
         </LinearLayout>
 
         <Button
+            android:id="@+id/logout_button"
+            android:layout_width="350dp"
+            android:layout_height="50dp"
+            android:background="@drawable/spinner_background"
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp"
+            android:text="Logout"
+            android:textColor="@color/theme_color"
+            android:textAllCaps="false"
+            android:fontFamily="@font/lexend_deca"
+            android:textSize="20sp"/>
+
+        <TextView
+            android:layout_width="350dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/logout_warning"
+            android:layout_gravity="center"
+            android:layout_marginTop="5dp"
+            android:textColor="@color/warning_red"/>
+
+        <Button
             android:id="@+id/clear_data_button"
             android:layout_width="350dp"
             android:layout_height="50dp"

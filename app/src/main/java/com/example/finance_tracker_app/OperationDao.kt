@@ -19,4 +19,7 @@ interface OperationDao {
 
     @Query("DELETE FROM operations")
     suspend fun deleteAllOperations()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(operations: List<Operation>)
 }

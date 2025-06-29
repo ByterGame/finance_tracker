@@ -17,4 +17,5 @@
     <string name="currency_cad">Canadian Dollar</string>
     <string name="currency_chf">Swiss Franc</string>
     <string name="currency_try">Turkish Lira</string>
+    <string name="logout_warning">You can log out of your account, but your data will be saved on the server so that you can restore it later.</string>
 </resources>

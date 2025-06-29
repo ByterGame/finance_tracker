@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,6 +22,12 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import android.widget.Toast
 import androidx.core.content.edit
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
+import com.example.finance_tracker_app.AddCardActivity
+import okhttp3.ResponseBody
+import retrofit2.Call
+
 
 
 class SettingsActivity : AppCompatActivity() {
@@ -54,6 +61,59 @@ class SettingsActivity : AppCompatActivity() {
             finish()
         }
 
+        val logoutButton = findViewById<Button>(R.id.logout_button)
+        val userEmail = getUserEmail(this@SettingsActivity)
+
+        if (userEmail.isNullOrEmpty()) {
+            logoutButton.text = "Register"
+            logoutButton.setOnClickListener {
+                startActivity(Intent(this@SettingsActivity, Registration::class.java))
+                finish()
+            }
+        } else {
+            logoutButton.text = "Logout"
+            logoutButton.setOnClickListener {
+                val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+                builder.setTitle("Confirm Logout")
+                builder.setMessage("Are you sure you want to log out of your current account?")
+                builder.setPositiveButton("Yes") { dialog, _ ->
+
+                    val prefsList = listOf(
+                        "settings",
+                        "dark_theme",
+                        "cards_secure_prefs",
+                        "user_categories",
+                        "categories_list",
+                        "cards_list",
+                        "dashboard_prefs",
+                        "secure_prefs",
+                        "app_prefs",
+                    )
+
+                    for (name in prefsList) {
+                        getSharedPreferences(name, Context.MODE_PRIVATE).edit() { clear() }
+                    }
+
+                    lifecycleScope.launch {
+                        val db = AppDatabase.getDatabase(this@SettingsActivity)
+                        db.operationDao().deleteAllOperations()
+                        Toast.makeText(
+                            this@SettingsActivity,
+                            "Logout successfully",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    startActivity(Intent(this@SettingsActivity, Registration::class.java))
+                    finish()
+                    dialog.dismiss()
+                }
+                builder.setNegativeButton("Cancel") { dialog, _ ->
+                    dialog.dismiss()
+                }
+
+                builder.create().show()
+            }
+        }
         val clearDataButton = findViewById<Button>(R.id.clear_data_button)
 
         clearDataButton.setOnClickListener {
@@ -61,6 +121,8 @@ class SettingsActivity : AppCompatActivity() {
             builder.setTitle("Confirm Deletion")
             builder.setMessage("Are you sure you want to delete all data without the possibility of recovery?")
             builder.setPositiveButton("Yes") { dialog, _ ->
+                val userEmail = getUserEmail(this@SettingsActivity)
+
                 val prefsList = listOf(
                     "settings",
                     "dark_theme",
@@ -82,9 +144,24 @@ class SettingsActivity : AppCompatActivity() {
                     db.operationDao().deleteAllOperations()
 
                     Toast.makeText(this@SettingsActivity, "Data cleared successfully", Toast.LENGTH_SHORT).show()
+                    userEmail?.let {
+                        val call = RetrofitClient.instance.deleteUserData(EmailRequest(it))
+                        call.enqueue(object : retrofit2.Callback<ResponseBody> {
+                            override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                                if (response.isSuccessful) {
+                                    Toast.makeText(this@SettingsActivity, "Server data cleared successfully", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(this@SettingsActivity, "Server error: unable to delete", Toast.LENGTH_SHORT).show()
+                                }
+                                startActivity(Intent(this@SettingsActivity, Registration::class.java))
+                                finish()
+                            }
 
-                    startActivity(Intent(this@SettingsActivity, Registration::class.java))
-                    finish()
+                            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                                Toast.makeText(this@SettingsActivity, "Error connecting to server", Toast.LENGTH_SHORT).show()
+                            }
+                        })
+                    }
                 }
                 dialog.dismiss()
             }
@@ -97,6 +174,26 @@ class SettingsActivity : AppCompatActivity() {
 
         setupSwitchTheme()
         setupCurrencySpinner()
+    }
+
+    fun getUserEmail(context: Context): String? {
+        return try {
+            val masterKey = MasterKey.Builder(context)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+
+            val sharedPreferences = EncryptedSharedPreferences.create(
+                context,
+                "secure_prefs",
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+            sharedPreferences.getString("user_email", null)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getString("user_email", null)
+        }
     }
 
     private fun setupCurrencySpinner() {

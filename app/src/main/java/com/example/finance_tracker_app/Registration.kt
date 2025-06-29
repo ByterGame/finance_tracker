@@ -21,7 +21,13 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import androidx.appcompat.app.AppCompatDelegate
 import android.content.Context
-
+import com.example.finance_tracker_app.utils.CardStorage
+import androidx.lifecycle.lifecycleScope
+import com.google.gson.Gson
+import kotlinx.coroutines.launch
+import android.util.Log
+import androidx.appcompat.app.AlertDialog
+import com.example.finance_tracker_app.AddCardActivity.Card
 
 
 class Registration : AppCompatActivity() {
@@ -148,27 +154,21 @@ class Registration : AppCompatActivity() {
                         val name = nameField.text.toString().trim()
                         saveName(name)
                         Toast.makeText(this@Registration, "Проверка прошла успешно!", Toast.LENGTH_SHORT).show()
-                        val intent = Intent(this@Registration, SetUpPassCode::class.java)
-                        val masterKey = MasterKey.Builder(applicationContext)
-                            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                            .build()
-
-                        val sharedPreferences = EncryptedSharedPreferences.create(
-                            applicationContext,
-                            "secure_prefs",
-                            masterKey,
-                            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-                        )
-                        sharedPreferences.edit().putString("user_email", email).apply()
+                        saveEmailSecurely(email)
 
                         val api = RetrofitClient.instance
                         val request = EmailRequest(emailField.text.toString())
 
                         api.registerUser(request).enqueue(object : Callback<ResponseBody> {
                             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                                if (response.isSuccessful) {
+                                if (response.code() == 201 || response.code() == 200) {
+                                    Log.d("Code 200||201", response.code().toString())
                                     Toast.makeText(this@Registration, "Email зарегистрирован", Toast.LENGTH_SHORT).show()
+                                    startActivity(Intent(this@Registration, SetUpPassCode::class.java))
+                                    finish()
+                                } else if (response.code() == 409) {
+                                    Log.d("Code 409", email)
+                                    showRestoreDialog(email)
                                 } else {
                                     Toast.makeText(this@Registration, "Ошибка регистрации", Toast.LENGTH_SHORT).show()
                                 }
@@ -178,9 +178,8 @@ class Registration : AppCompatActivity() {
                                 Toast.makeText(this@Registration, "Сбой запроса", Toast.LENGTH_SHORT).show()
                             }
                         })
-                        
-                        startActivity(intent)
-                        finish()
+
+
                     } else {
                         Toast.makeText(this@Registration, "Неверный код", Toast.LENGTH_SHORT).show()
                     }
@@ -198,6 +197,117 @@ class Registration : AppCompatActivity() {
             finish()
         }
     }
+
+    private fun showRestoreDialog(email: String) {
+        RetrofitClient.instance.getUserData(email)
+            .enqueue(object : Callback<UserDataResponse> {
+                override fun onResponse(
+                    call: Call<UserDataResponse>,
+                    response: Response<UserDataResponse>
+                ) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val data = response.body()!!
+                        Log.d("check data", data.toString())
+                        val hasAnyData = data.cards.isNotEmpty() ||
+                                data.categories.isNotEmpty() ||
+                                data.operations.isNotEmpty()
+                        Log.d("check data", hasAnyData.toString())
+                        if (!hasAnyData) {
+                            startActivity(Intent(this@Registration, SetUpPassCode::class.java))
+                            finish()
+                        }
+
+                        AlertDialog.Builder(this@Registration)
+                            .setTitle("Восстановить данные?")
+                            .setMessage("Найдено ранее сохранённые данные. Хотите восстановить их?")
+                            .setPositiveButton("Да") { _, _ ->
+                                restoreDataLocally(data)
+                            }
+                            .setNegativeButton("Нет") { _, _ ->
+                                clearRemoteData(email)
+                                startActivity(Intent(this@Registration, SetUpPassCode::class.java))
+                                finish()
+                            }
+                            .show()
+                    }
+                }
+
+                override fun onFailure(call: Call<UserDataResponse>, t: Throwable) {
+                    Log.e("RestoreDialog", "Ошибка загрузки данных", t)
+                }
+            })
+    }
+
+
+    private fun restoreDataLocally(data: UserDataResponse) {
+        val cards = data.cards.map {
+            Card(name = it.name, balance = it.balance, currency = it.currency)
+        }
+        CardStorage.saveCards(this, cards.toMutableList())
+
+        val prefs = getSharedPreferences("user_categories", MODE_PRIVATE)
+        val json = Gson().toJson(data.categories.map {
+            Category(name = it.name, color = it.color)
+        })
+        prefs.edit().putString("categories_list", json).apply()
+
+        val db = AppDatabase.getDatabase(this)
+        val operationDao = db.operationDao()
+        lifecycleScope.launch {
+            val operations = data.operations.map {
+                Operation(
+                    type = it.type,
+                    amount = it.amount,
+                    accountName = it.accountName,
+                    currency = it.currency,
+                    category = it.category,
+                    date = it.date,
+                    note = it.note
+                )
+            }
+            operationDao.insertAll(operations)
+            Toast.makeText(this@Registration, "Данные восстановлены", Toast.LENGTH_SHORT).show()
+        }
+        startActivity(Intent(this@Registration, SetUpPassCode::class.java))
+        finish()
+    }
+
+
+    private fun clearRemoteData(email: String) {
+        val emailRequest = EmailRequest(email = email)
+        RetrofitClient.instance.deleteUserData(emailRequest).enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if (response.isSuccessful) {
+                    saveEmailSecurely(email)
+                    Toast.makeText(this@Registration, "Данные удалены, начнём с чистого листа", Toast.LENGTH_SHORT).show()
+                    startActivity(Intent(this@Registration, SetUpPassCode::class.java))
+                    finish()
+                } else {
+                    Toast.makeText(this@Registration, "Не удалось удалить данные", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Toast.makeText(this@Registration, "Ошибка: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun saveEmailSecurely(email: String) {
+        val masterKey = MasterKey.Builder(applicationContext)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+
+        val sharedPreferences = EncryptedSharedPreferences.create(
+            applicationContext,
+            "secure_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+        sharedPreferences.edit().putString("user_email", email).apply()
+    }
+
 
     private fun saveName(name: String) {
         try {
