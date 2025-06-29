@@ -84,6 +84,7 @@
             android:background="@drawable/edittext_background_mini"
             android:inputType="numberDecimal"
             android:hint="0"
+            android:text="1"
             android:textColor="@color/theme_color"
             android:textColorHint="@color/theme_color"
             android:fontFamily="@font/lexend_deca"
@@ -192,20 +193,9 @@
                 android:gravity="end"
                 android:text="12, 142"
                 android:textColor="@color/primary_color"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                android:layout_marginEnd="10dp"/>
 
-            <TextView
-                android:id="@+id/currency_total_amount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|end"
-                android:layout_marginLeft="7dp"
-                android:layout_marginRight="10dp"
-                android:fontFamily="@font/lexend_deca"
-                android:gravity="center"
-                android:text="$"
-                android:textColor="@color/primary_color"
-                android:textSize="16sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -236,20 +226,9 @@
                 android:gravity="end"
                 android:text="5, 062"
                 android:textColor="@color/primary_color"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                android:layout_marginEnd="10dp"/>
 
-            <TextView
-                android:id="@+id/currency_total_expenses"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|end"
-                android:layout_marginLeft="7dp"
-                android:layout_marginRight="10dp"
-                android:fontFamily="@font/lexend_deca"
-                android:gravity="center"
-                android:text="$"
-                android:textColor="@color/primary_color"
-                android:textSize="16sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -280,20 +259,9 @@
                 android:gravity="end"
                 android:text="7, 080"
                 android:textColor="@color/primary_color"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                android:layout_marginEnd="10dp"/>
 
-            <TextView
-                android:id="@+id/currency_total_income"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|end"
-                android:layout_marginLeft="7dp"
-                android:layout_marginRight="10dp"
-                android:fontFamily="@font/lexend_deca"
-                android:gravity="center"
-                android:text="$"
-                android:textColor="@color/primary_color"
-                android:textSize="16sp" />
         </LinearLayout>
 
     </LinearLayout>

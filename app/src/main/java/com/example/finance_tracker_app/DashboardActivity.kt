@@ -386,8 +386,16 @@ class DashboardActivity : AppCompatActivity() {
         val exp = mutableListOf<Entry>()
         dates.forEachIndexed { idx, ts ->
             val list = byDate[ts]!!
-            val iSum = list.filter { it.type.equals("Income", true) }.sumOf { it.amount }.toFloat()
-            val eSum = list.filter { it.type.equals("Expense", true) }.sumOf { it.amount }.toFloat()
+            val iSum = list.filter { it.type.equals("Income", true) }.sumOf {
+                val rateFrom = ExchangeRatesManager.getRate(it.currency)
+                val rateTo = ExchangeRatesManager.getRate(mainCurrency)
+                if (rateFrom != 0.0) it.amount / rateFrom * rateTo else 0.0
+            }.toFloat()
+            val eSum = list.filter { it.type.equals("Expense", true) }.sumOf {
+                val rateFrom = ExchangeRatesManager.getRate(it.currency)
+                val rateTo = ExchangeRatesManager.getRate(mainCurrency)
+                if (rateFrom != 0.0) it.amount / rateFrom * rateTo else 0.0
+            }.toFloat()
             inc.add(Entry(idx.toFloat(), iSum))
             exp.add(Entry(idx.toFloat(), eSum))
         }
@@ -447,18 +455,29 @@ class DashboardActivity : AppCompatActivity() {
         if (currentGraphType == GraphType.ALL) {
             lineChart.marker = null
         } else {
-            lineChart.marker = MyMarkerView(this, R.layout.custom_marker_view)
+            lineChart.marker = MyMarkerView(this, R.layout.custom_marker_view, mainCurrency)
         }
         lineChart.invalidate()
     }
 
-    class MyMarkerView(context: Context, layoutResource: Int) : MarkerView(context, layoutResource) {
+    class MyMarkerView(
+        context: Context,
+        layoutResource: Int,
+        private val mainCurrency: String
+    ) : MarkerView(context, layoutResource) {
 
         private val textView: TextView = findViewById(R.id.marker_text)
 
+        private val currencySymbolMap = mapOf(
+            "USD" to "$", "EUR" to "€", "GBP" to "£", "JPY" to "¥",
+            "CNY" to "¥", "RUB" to "₽", "INR" to "₹", "AUD" to "A$",
+            "CAD" to "C$", "CHF" to "₣", "TRY" to "₺"
+        )
+
         override fun refreshContent(e: Entry?, highlight: Highlight?) {
             if (e != null) {
-                textView.text = "${e.y.toInt()} $"
+                val symbol = currencySymbolMap[mainCurrency] ?: mainCurrency
+                textView.text = "${e.y.toInt()} $symbol"
                 super.refreshContent(e, highlight)
             }
         }
@@ -467,6 +486,7 @@ class DashboardActivity : AppCompatActivity() {
             return MPPointF(-(width / 2f), -height.toFloat())
         }
     }
+
 
     private fun loadCards(): List<Card> {
         return try {

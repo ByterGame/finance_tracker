@@ -38,6 +38,12 @@ class DetailedStatisticsActivity : AppCompatActivity() {
     private lateinit var binding: DetailedStatisticsLayoutBinding
     private lateinit var db: AppDatabase
     private lateinit var operationDao: OperationDao
+    private var mainCurrency = ""
+    private val currencySymbolMap = mapOf(
+        "USD" to "$", "EUR" to "€", "GBP" to "£", "JPY" to "¥",
+        "CNY" to "¥", "RUB" to "₽", "INR" to "₹", "AUD" to "A$",
+        "CAD" to "C$", "CHF" to "₣", "TRY" to "₺"
+    )
 
 
     data class Category(val name: String, val color: Int)
@@ -55,6 +61,7 @@ class DetailedStatisticsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        mainCurrency = getMainCurrency()
         binding = DetailedStatisticsLayoutBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -69,7 +76,6 @@ class DetailedStatisticsActivity : AppCompatActivity() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         }
-
         binding.yearsPeriod.addTextChangedListener(watcher)
         binding.monthsPeriod.addTextChangedListener(watcher)
         binding.daysPeriod.addTextChangedListener(watcher)
@@ -158,22 +164,6 @@ class DetailedStatisticsActivity : AppCompatActivity() {
         return sb.toString()
     }
 
-    private fun saveCSVToFile(csvContent: String): android.net.Uri? {
-        return try {
-            val filename = "finance_export_${System.currentTimeMillis()}.csv"
-            val file = File(getExternalFilesDir(null), filename)
-            file.writeText(csvContent)
-            androidx.core.content.FileProvider.getUriForFile(
-                this,
-                "${applicationContext.packageName}.fileprovider",
-                file
-            )
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
-
     private fun saveCSVToDocuments(csvContent: String): File? {
         return try {
             val docsDir = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
@@ -217,28 +207,28 @@ class DetailedStatisticsActivity : AppCompatActivity() {
     }
 
     private fun setupGeneralInfo(operations: List<Operation>) {
-        val income = operations.filter { it.type.lowercase() == "income" }.sumOf { it.amount }
-        val expense = operations.filter { it.type.lowercase() == "expense" }.sumOf { it.amount }
+        val income = operations.filter { it.type.lowercase() == "income" }
+            .sumOf { convertToMainCurrency(it.amount, it.currency) }
 
-        val incomeValue = if (income.isNaN()) 0.0f else income.toFloat()
-        val expenseValue = if (expense.isNaN()) 0.0f else expense.toFloat()
-        val totalValue = expenseValue + incomeValue
+        val expense = operations.filter { it.type.lowercase() == "expense" }
+            .sumOf { convertToMainCurrency(it.amount, it.currency) }
 
-        binding.totalAmount.text = String.format("%,.0f $", totalValue)
-        binding.totalIncome.text = String.format("%,.0f $", incomeValue)
-        binding.totalExpenses.text = String.format("%,.0f $", expenseValue)
+
+
+        binding.totalIncome.text = String.format("%,.0f %s", income, currencySymbolMap[mainCurrency])
+        binding.totalExpenses.text = String.format("%,.0f %s", expense, currencySymbolMap[mainCurrency])
+        binding.totalAmount.text = String.format("%,.0f %s", income + expense, currencySymbolMap[mainCurrency])
     }
 
     private fun setupTotalAmountChart(operations: List<Operation>) {
-        val income = operations.filter { it.type.lowercase() == "income" }.sumOf { it.amount }
-        val expense = operations.filter { it.type.lowercase() == "expense" }.sumOf { it.amount }
-
-        val incomeValue = if (income.isNaN()) 0.0f else income.toFloat()
-        val expenseValue = if (expense.isNaN()) 0.0f else expense.toFloat()
+        val income = operations.filter { it.type.lowercase() == "income" }
+            .sumOf { convertToMainCurrency(it.amount, it.currency) }
+        val expense = operations.filter { it.type.lowercase() == "expense" }
+            .sumOf { convertToMainCurrency(it.amount, it.currency) }
 
         val entries = listOf(
-            PieEntry(incomeValue.toFloat(), "Income"),
-            PieEntry(expenseValue.toFloat(), "Expense")
+            PieEntry(income.toFloat(), "Income"),
+            PieEntry(expense.toFloat(), "Expense")
         )
 
         val colors = listOf(
@@ -264,8 +254,11 @@ class DetailedStatisticsActivity : AppCompatActivity() {
         title: String
     ) {
         val ops = operations.filter { it.type.equals(type, ignoreCase = true) }
-        val total = ops.sumOf { it.amount }
-        val grouped = ops.groupBy { it.category }.mapValues { it.value.sumOf { it.amount } }
+
+        val grouped = ops.groupBy { it.category }
+            .mapValues { it.value.sumOf { op -> convertToMainCurrency(op.amount, op.currency) } }
+
+        val total = grouped.values.sum()
 
         val entries = mutableListOf<PieEntry>()
         val colors = mutableListOf<Int>()
@@ -298,6 +291,7 @@ class DetailedStatisticsActivity : AppCompatActivity() {
             holeRadius = 70f
             transparentCircleRadius = 0f
             description.isEnabled = false
+            pieChart.setHoleColor(ContextCompat.getColor(context, R.color.theme_color))
             this.centerText = centerText
             setCenterTextSize(12f)
             setCenterTextColor(ContextCompat.getColor(context, R.color.primary_color))
@@ -336,7 +330,7 @@ class DetailedStatisticsActivity : AppCompatActivity() {
 
         nameText.text = "$name:"
         amountText.text = String.format("%,.0f", amount)
-        currencyText.text = currency
+        currencyText.text = currencySymbolMap[currency]
 
         val color = if (isIncome) {
             ContextCompat.getColor(this, R.color.income_green)
@@ -368,26 +362,38 @@ class DetailedStatisticsActivity : AppCompatActivity() {
         val incomeTop = operations
             .filter { it.type.lowercase() == "income" }
             .groupBy { it.category }
-            .mapValues { (_, ops) -> ops.sumOf { it.amount } }
+            .mapValues { (_, ops) -> ops.sumOf { convertToMainCurrency(it.amount, it.currency) } }
             .toList()
             .sortedByDescending { it.second }
             .take(3)
 
         incomeTop.forEach { (category, sum) ->
-            addCategoryItem(container, category, sum, "$", isIncome = true)
+            addCategoryItem(container, category, sum, mainCurrency, isIncome = true)
         }
 
         val expenseTop = operations
             .filter { it.type.lowercase() == "expense" }
             .groupBy { it.category }
-            .mapValues { (_, ops) -> ops.sumOf { it.amount } }
+            .mapValues { (_, ops) -> ops.sumOf { convertToMainCurrency(it.amount, it.currency) } }
             .toList()
             .sortedByDescending { it.second }
             .take(3)
 
         expenseTop.forEach { (category, sum) ->
-            addCategoryItem(container, category, sum, "$", isIncome = false)
+            addCategoryItem(container, category, sum, mainCurrency, isIncome = false)
         }
+    }
+
+    private fun getMainCurrency(): String {
+        return getSharedPreferences("settings", MODE_PRIVATE)
+            .getString("main_currency", "USD") ?: "USD"
+    }
+
+
+    private fun convertToMainCurrency(amount: Double, fromCurrency: String): Double {
+        val fromRate = ExchangeRatesManager.getRate(fromCurrency)
+        val toRate = ExchangeRatesManager.getRate(mainCurrency)
+        return amount * (toRate / fromRate)
     }
 
 }
