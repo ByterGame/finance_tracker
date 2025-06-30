@@ -24,6 +24,10 @@ import android.util.Log
 import com.example.finance_tracker_app.AddCardActivity.Card
 import okhttp3.ResponseBody
 import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 
 
 class AddOperationActivity : AppCompatActivity() {
@@ -160,11 +164,16 @@ class AddOperationActivity : AppCompatActivity() {
                             override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
                                 if (response.isSuccessful) {
                                     Log.d("AddOperation", "Operation synced to backend")
+                                    lifecycleScope.launch {
+                                        retryPendingOperations(this@AddOperationActivity)
+                                    }
                                 } else {
                                     Log.e("AddOperation", "Failed to sync operation: ${response.code()}")
-                                    lifecycleScope.launch {
+                                    Log.d("check json", "гыгыгы")
+                                    CoroutineScope(Dispatchers.IO).launch {
                                         val gson = Gson()
                                         val json = gson.toJson(operationRequest)
+                                        Log.d("check json", json)
                                         pendingOperationDao.insert(PendingOperation(operationJson = json))
                                     }
                                 }
@@ -172,10 +181,11 @@ class AddOperationActivity : AppCompatActivity() {
 
                             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                                 Log.e("AddOperation", "Network error syncing operation", t)
-
-                                lifecycleScope.launch {
+                                Log.d("check json", "гыгыгы")
+                                CoroutineScope(Dispatchers.IO).launch {
                                     val gson = Gson()
                                     val json = gson.toJson(operationRequest)
+                                    Log.d("check json", json)
                                     pendingOperationDao.insert(PendingOperation(operationJson = json))
                                 }
                             }
@@ -203,6 +213,41 @@ class AddOperationActivity : AppCompatActivity() {
                 .show()
         } else {
             proceedSaving()
+        }
+    }
+
+    suspend fun retryPendingOperations(context: Context) {
+        val dao = AppDatabase.getDatabase(context).pendingOperationDao()
+        val list = dao.getAll()
+
+        if (list.isEmpty()) {
+            Log.d("RetryOperation", "No pending operations to sync")
+            return
+        }
+
+        val gson = Gson()
+
+        list.forEach { pending ->
+            val request = gson.fromJson(pending.operationJson, OperationRequest::class.java)
+
+            RetrofitClient.instance.saveOperation(request)
+                .enqueue(object : Callback<ResponseBody> {
+                    override fun onResponse(
+                        call: Call<ResponseBody>,
+                        response: Response<ResponseBody>
+                    ) {
+                        if (response.isSuccessful) {
+                            lifecycleScope.launch {
+                                dao.delete(pending)
+                                Log.d("RetryOperation", "Successfully synced pending operation")
+                            }
+                        }
+                    }
+
+                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                        Log.e("RetryOperation", "Still failed to sync pending operation", t)
+                    }
+                })
         }
     }
 
