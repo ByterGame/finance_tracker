@@ -16,11 +16,15 @@ import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
 import androidx.appcompat.app.AppCompatDelegate
 import android.content.Context
 import android.util.Log
+import androidx.lifecycle.lifecycleScope
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.example.finance_tracker_app.AddOperationActivity
 import okhttp3.ResponseBody
 import retrofit2.Call
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 data class Category(val name: String, val color: Int)
 
@@ -105,18 +109,68 @@ class AddCategoryActivity : AppCompatActivity(), ColorPickerDialogListener {
                     override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
                         if (response.isSuccessful) {
                             Log.d("AddCategory", "Category synced to backend")
+                            lifecycleScope.launch {
+                                retryPendingCategories(this@AddCategoryActivity)
+                            }
                         } else {
                             Log.e("AddCategory", "Failed to sync Category: ${response.code()}")
+                            savePendingCategory(categoryRequest)
                         }
                     }
 
                     override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                         Log.e("AddCategory", "Network error syncing operation", t)
+                        savePendingCategory(categoryRequest)
                     }
                 })
             prefs.edit().putString("categories_list", gson.toJson(currentCategories)).apply()
         }
     }
+
+    private fun savePendingCategory(categoryRequest: CategoryRequest) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val gson = Gson()
+            val json = gson.toJson(categoryRequest)
+            val db = AppDatabase.getDatabase(this@AddCategoryActivity)
+            db.pendingCategoryDao().insert(PendingCategory(categoryJson = json))
+            Log.d("AddCategory", "Saved category locally for retry")
+        }
+    }
+
+    suspend fun retryPendingCategories(context: Context) {
+        val db = AppDatabase.getDatabase(context)
+        val pendingCategoryDao = db.pendingCategoryDao()
+        val gson = Gson()
+
+        val list = pendingCategoryDao.getAll()
+        if (list.isEmpty()) {
+            Log.d("RetryCategories", "No pending categories to sync")
+            return
+        }
+
+        for (pending in list) {
+            val categoryRequest = gson.fromJson(pending.categoryJson, CategoryRequest::class.java)
+
+            RetrofitClient.instance.saveCategory(categoryRequest)
+                .enqueue(object : retrofit2.Callback<ResponseBody> {
+                    override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                        if (response.isSuccessful) {
+                            lifecycleScope.launch {
+                                pendingCategoryDao.delete(pending)
+                                Log.d("RetryCategories", "Category synced and removed from local storage")
+                            }
+                        } else {
+                            Log.e("RetryCategories", "Failed to sync category: ${response.code()}")
+                        }
+                    }
+
+                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                        Log.e("RetryCategories", "Network error syncing category", t)
+                    }
+                })
+        }
+    }
+
     fun getUserEmail(context: Context): String? {
         return try {
             val masterKey = MasterKey.Builder(context)

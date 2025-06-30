@@ -23,6 +23,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         lifecycleScope.launch {
             retryPendingOperations(this@MainActivity)
+            retryPendingCards(this@MainActivity)
+            retryPendingCategories(this@MainActivity)
         }
         val hasPinCode = checkIfPinExists()
 
@@ -88,6 +90,73 @@ class MainActivity : AppCompatActivity() {
 
                     override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                         Log.e("RetryOperation", "Still failed to sync pending operation", t)
+                    }
+                })
+        }
+    }
+
+    suspend fun retryPendingCards(context: Context) {
+        val db = AppDatabase.getDatabase(context)
+        val pendingCardDao = db.pendingCardDao()
+        val gson = Gson()
+
+        val list = pendingCardDao.getAll()
+        if (list.isEmpty()) {
+            Log.d("RetryCards", "No pending cards to sync")
+            return
+        }
+
+        for (pending in list) {
+            val cardRequest = gson.fromJson(pending.cardJson, CardRequest::class.java)
+
+            RetrofitClient.instance.saveCard(cardRequest)
+                .enqueue(object : retrofit2.Callback<ResponseBody> {
+                    override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                        if (response.isSuccessful) {
+                            lifecycleScope.launch {
+                                pendingCardDao.delete(pending)
+                                Log.d("RetryCards", "Card synced successfully and deleted locally")
+                            }
+                        } else {
+                            Log.e("RetryCards", "Failed to sync card: ${response.code()}")
+                        }
+                    }
+                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                        Log.e("RetryCards", "Network error syncing card", t)
+                    }
+                })
+        }
+    }
+
+    suspend fun retryPendingCategories(context: Context) {
+        val db = AppDatabase.getDatabase(context)
+        val pendingCategoryDao = db.pendingCategoryDao()
+        val gson = Gson()
+
+        val list = pendingCategoryDao.getAll()
+        if (list.isEmpty()) {
+            Log.d("RetryCategories", "No pending categories to sync")
+            return
+        }
+
+        for (pending in list) {
+            val categoryRequest = gson.fromJson(pending.categoryJson, CategoryRequest::class.java)
+
+            RetrofitClient.instance.saveCategory(categoryRequest)
+                .enqueue(object : retrofit2.Callback<ResponseBody> {
+                    override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                        if (response.isSuccessful) {
+                            lifecycleScope.launch {
+                                pendingCategoryDao.delete(pending)
+                                Log.d("RetryCategories", "Category synced and removed from local storage")
+                            }
+                        } else {
+                            Log.e("RetryCategories", "Failed to sync category: ${response.code()}")
+                        }
+                    }
+
+                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                        Log.e("RetryCategories", "Network error syncing category", t)
                     }
                 })
         }

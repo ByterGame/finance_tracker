@@ -1,14 +1,12 @@
 package com.example.finance_tracker_app
 
 
-import android.content.res.Configuration
 import android.os.Bundle
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,14 +15,14 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.Spinner
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import android.widget.Toast
 import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import com.example.finance_tracker_app.AddCardActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import okhttp3.ResponseBody
 import retrofit2.Call
 
@@ -123,33 +121,35 @@ class SettingsActivity : AppCompatActivity() {
             builder.setPositiveButton("Yes") { dialog, _ ->
                 val userEmail = getUserEmail(this@SettingsActivity)
 
-                val prefsList = listOf(
-                    "settings",
-                    "dark_theme",
-                    "cards_secure_prefs",
-                    "user_categories",
-                    "categories_list",
-                    "cards_list",
-                    "dashboard_prefs",
-                    "secure_prefs",
-                    "app_prefs",
-                )
-
-                for (name in prefsList) {
-                    getSharedPreferences(name, Context.MODE_PRIVATE).edit() { clear() }
-                }
-
                 lifecycleScope.launch {
-                    val db = AppDatabase.getDatabase(this@SettingsActivity)
-                    db.operationDao().deleteAllOperations()
-
-                    Toast.makeText(this@SettingsActivity, "Data cleared successfully", Toast.LENGTH_SHORT).show()
                     userEmail?.let {
                         val call = RetrofitClient.instance.deleteUserData(EmailRequest(it))
                         call.enqueue(object : retrofit2.Callback<ResponseBody> {
                             override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
                                 if (response.isSuccessful) {
                                     Toast.makeText(this@SettingsActivity, "Server data cleared successfully", Toast.LENGTH_SHORT).show()
+                                    val prefsList = listOf(
+                                        "settings",
+                                        "dark_theme",
+                                        "cards_secure_prefs",
+                                        "user_categories",
+                                        "categories_list",
+                                        "cards_list",
+                                        "dashboard_prefs",
+                                        "secure_prefs",
+                                        "app_prefs",
+                                    )
+
+                                    for (name in prefsList) {
+                                        getSharedPreferences(name, Context.MODE_PRIVATE).edit() { clear() }
+                                    }
+
+
+                                    val db = AppDatabase.getDatabase(this@SettingsActivity)
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        db.operationDao().deleteAllOperations()
+                                    }
+                                    Toast.makeText(this@SettingsActivity, "Data cleared successfully", Toast.LENGTH_SHORT).show()
                                 } else {
                                     Toast.makeText(this@SettingsActivity, "Server error: unable to delete", Toast.LENGTH_SHORT).show()
                                 }

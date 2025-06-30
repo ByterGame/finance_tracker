@@ -10,8 +10,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import android.content.SharedPreferences
 import android.text.Editable
 import android.text.TextWatcher
 import java.text.DecimalFormat
@@ -20,10 +18,14 @@ import java.util.Locale
 import androidx.appcompat.app.AppCompatDelegate
 import android.content.Context
 import android.util.Log
-import com.example.finance_tracker_app.AddOperationActivity
+import androidx.lifecycle.lifecycleScope
+import com.example.finance_tracker_app.MainActivity
 import com.example.finance_tracker_app.utils.CardStorage
 import okhttp3.ResponseBody
 import retrofit2.Call
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 
 
@@ -227,13 +229,30 @@ class AddCardActivity : AppCompatActivity() {
                     override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
                         if (response.isSuccessful) {
                             Log.d("AddCard", "Card synced to backend")
+                            lifecycleScope.launch {
+                                retryPendingCards(this@AddCardActivity)
+                            }
                         } else {
                             Log.e("AddCard", "Failed to sync card: ${response.code()}")
+                            CoroutineScope(Dispatchers.IO).launch {
+                                val gson = Gson()
+                                val json = gson.toJson(cardRequest)
+                                val db = AppDatabase.getDatabase(this@AddCardActivity)
+                                db.pendingCardDao().insert(PendingCard(cardJson = json))
+                                Log.d("AddCard", "Saved card locally for retry")
+                            }
                         }
                     }
 
                     override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                         Log.e("AddCard", "Network error syncing operation", t)
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val gson = Gson()
+                            val json = gson.toJson(cardRequest)
+                            val db = AppDatabase.getDatabase(this@AddCardActivity)
+                            db.pendingCardDao().insert(PendingCard(cardJson = json))
+                            Log.d("AddCard", "Saved card locally for retry")
+                        }
                     }
                 })
 
@@ -242,6 +261,39 @@ class AddCardActivity : AppCompatActivity() {
 
             startActivity(Intent(this@AddCardActivity, DashboardActivity::class.java))
             finish()
+        }
+    }
+
+    suspend fun retryPendingCards(context: Context) {
+        val db = AppDatabase.getDatabase(context)
+        val pendingCardDao = db.pendingCardDao()
+        val gson = Gson()
+
+        val list = pendingCardDao.getAll()
+        if (list.isEmpty()) {
+            Log.d("RetryCards", "No pending cards to sync")
+            return
+        }
+
+        for (pending in list) {
+            val cardRequest = gson.fromJson(pending.cardJson, CardRequest::class.java)
+
+            RetrofitClient.instance.saveCard(cardRequest)
+                .enqueue(object : retrofit2.Callback<ResponseBody> {
+                    override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                        if (response.isSuccessful) {
+                            lifecycleScope.launch {
+                                pendingCardDao.delete(pending)
+                                Log.d("RetryCards", "Card synced successfully and deleted locally")
+                            }
+                        } else {
+                            Log.e("RetryCards", "Failed to sync card: ${response.code()}")
+                        }
+                    }
+                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                        Log.e("RetryCards", "Network error syncing card", t)
+                    }
+                })
         }
     }
 
