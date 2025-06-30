@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import com.example.finance_tracker_app.AddCardActivity.Card
+import com.example.finance_tracker_app.activities.AddCardActivity.Card
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 

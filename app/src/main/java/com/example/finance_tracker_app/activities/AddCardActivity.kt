@@ -1,33 +1,44 @@
-package com.example.finance_tracker_app
+package com.example.finance_tracker_app.activities
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.Spinner
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.lifecycleScope
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import com.google.gson.Gson
-import android.text.Editable
-import android.text.TextWatcher
-import java.text.DecimalFormat
-import java.text.DecimalFormatSymbols
-import java.util.Locale
-import androidx.appcompat.app.AppCompatDelegate
-import android.content.Context
-import android.util.Log
-import androidx.lifecycle.lifecycleScope
-import com.example.finance_tracker_app.MainActivity
+import com.example.finance_tracker_app.data.db.AppDatabase
+import com.example.finance_tracker_app.data.api.CardRequest
+import com.example.finance_tracker_app.data.db.PendingCard
+import com.example.finance_tracker_app.R
+import com.example.finance_tracker_app.data.api.RetrofitClient
 import com.example.finance_tracker_app.utils.CardStorage
-import okhttp3.ResponseBody
-import retrofit2.Call
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-
-
+import okhttp3.ResponseBody
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.Locale
 
 class AddCardActivity : AppCompatActivity() {
 
@@ -72,7 +83,7 @@ class AddCardActivity : AppCompatActivity() {
     private var selectedCurrency = "USD"
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         val isDark = prefs.getBoolean("dark_theme", false)
         val mode = if (isDark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         AppCompatDelegate.setDefaultNightMode(mode)
@@ -225,8 +236,8 @@ class AddCardActivity : AppCompatActivity() {
                 currency = newCard.currency.toString()
             )
             RetrofitClient.instance.saveCard(cardRequest)
-                .enqueue(object : retrofit2.Callback<ResponseBody> {
-                    override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                .enqueue(object : Callback<ResponseBody> {
+                    override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                         if (response.isSuccessful) {
                             Log.d("AddCard", "Card synced to backend")
                             lifecycleScope.launch {
@@ -237,7 +248,7 @@ class AddCardActivity : AppCompatActivity() {
                             CoroutineScope(Dispatchers.IO).launch {
                                 val gson = Gson()
                                 val json = gson.toJson(cardRequest)
-                                val db = AppDatabase.getDatabase(this@AddCardActivity)
+                                val db = AppDatabase.Companion.getDatabase(this@AddCardActivity)
                                 db.pendingCardDao().insert(PendingCard(cardJson = json))
                                 Log.d("AddCard", "Saved card locally for retry")
                             }
@@ -249,7 +260,7 @@ class AddCardActivity : AppCompatActivity() {
                         CoroutineScope(Dispatchers.IO).launch {
                             val gson = Gson()
                             val json = gson.toJson(cardRequest)
-                            val db = AppDatabase.getDatabase(this@AddCardActivity)
+                            val db = AppDatabase.Companion.getDatabase(this@AddCardActivity)
                             db.pendingCardDao().insert(PendingCard(cardJson = json))
                             Log.d("AddCard", "Saved card locally for retry")
                         }
@@ -265,7 +276,7 @@ class AddCardActivity : AppCompatActivity() {
     }
 
     suspend fun retryPendingCards(context: Context) {
-        val db = AppDatabase.getDatabase(context)
+        val db = AppDatabase.Companion.getDatabase(context)
         val pendingCardDao = db.pendingCardDao()
         val gson = Gson()
 
@@ -279,8 +290,8 @@ class AddCardActivity : AppCompatActivity() {
             val cardRequest = gson.fromJson(pending.cardJson, CardRequest::class.java)
 
             RetrofitClient.instance.saveCard(cardRequest)
-                .enqueue(object : retrofit2.Callback<ResponseBody> {
-                    override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                .enqueue(object : Callback<ResponseBody> {
+                    override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                         if (response.isSuccessful) {
                             lifecycleScope.launch {
                                 pendingCardDao.delete(pending)
@@ -313,7 +324,7 @@ class AddCardActivity : AppCompatActivity() {
             sharedPreferences.getString("user_email", null)
         } catch (e: Exception) {
             e.printStackTrace()
-            context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getString("user_email", null)
+            context.getSharedPreferences("app_prefs", MODE_PRIVATE).getString("user_email", null)
         }
     }
 }

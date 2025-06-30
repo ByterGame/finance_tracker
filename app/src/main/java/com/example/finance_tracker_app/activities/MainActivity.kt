@@ -1,4 +1,4 @@
-package com.example.finance_tracker_app
+package com.example.finance_tracker_app.activities
 
 import android.content.Context
 import android.content.Intent
@@ -8,6 +8,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.example.finance_tracker_app.data.db.AppDatabase
+import com.example.finance_tracker_app.data.api.CardRequest
+import com.example.finance_tracker_app.data.api.CategoryRequest
+import com.example.finance_tracker_app.data.api.OperationRequest
+import com.example.finance_tracker_app.data.api.RetrofitClient
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import okhttp3.ResponseBody
@@ -64,7 +69,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     suspend fun retryPendingOperations(context: Context) {
-        val dao = AppDatabase.getDatabase(context).pendingOperationDao()
+        val dao = AppDatabase.Companion.getDatabase(context).pendingOperationDao()
         val list = dao.getAll()
 
         if (list.isEmpty()) {
@@ -96,7 +101,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     suspend fun retryPendingCards(context: Context) {
-        val db = AppDatabase.getDatabase(context)
+        val db = AppDatabase.Companion.getDatabase(context)
         val pendingCardDao = db.pendingCardDao()
         val gson = Gson()
 
@@ -110,8 +115,8 @@ class MainActivity : AppCompatActivity() {
             val cardRequest = gson.fromJson(pending.cardJson, CardRequest::class.java)
 
             RetrofitClient.instance.saveCard(cardRequest)
-                .enqueue(object : retrofit2.Callback<ResponseBody> {
-                    override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                .enqueue(object : Callback<ResponseBody> {
+                    override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                         if (response.isSuccessful) {
                             lifecycleScope.launch {
                                 pendingCardDao.delete(pending)
@@ -129,7 +134,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     suspend fun retryPendingCategories(context: Context) {
-        val db = AppDatabase.getDatabase(context)
+        val db = AppDatabase.Companion.getDatabase(context)
         val pendingCategoryDao = db.pendingCategoryDao()
         val gson = Gson()
 
@@ -143,8 +148,8 @@ class MainActivity : AppCompatActivity() {
             val categoryRequest = gson.fromJson(pending.categoryJson, CategoryRequest::class.java)
 
             RetrofitClient.instance.saveCategory(categoryRequest)
-                .enqueue(object : retrofit2.Callback<ResponseBody> {
-                    override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                .enqueue(object : Callback<ResponseBody> {
+                    override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                         if (response.isSuccessful) {
                             lifecycleScope.launch {
                                 pendingCategoryDao.delete(pending)

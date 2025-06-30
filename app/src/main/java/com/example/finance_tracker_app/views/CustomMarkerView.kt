@@ -1,10 +1,11 @@
-package com.example.finance_tracker_app
+package com.example.finance_tracker_app.views
 
 import android.content.Context
 import android.widget.TextView
 import com.example.finance_tracker_app.R
 import com.github.mikephil.charting.components.MarkerView
 import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.utils.MPPointF
 
@@ -17,7 +18,7 @@ class CustomMarkerView(context: Context) : MarkerView(context, R.layout.marker_v
     private var offsetY = 0f
 
     override fun refreshContent(e: Entry?, highlight: Highlight?) {
-        val pieEntry = e as? com.github.mikephil.charting.data.PieEntry
+        val pieEntry = e as? PieEntry
         pieEntry?.let {
             labelTextView.text = it.label
             valueTextView.text = it.value.toInt().toString()
@@ -49,4 +50,3 @@ class CustomMarkerView(context: Context) : MarkerView(context, R.layout.marker_v
         return MPPointF(offsetX, offsetY)
     }
 }
-

@@ -1,4 +1,4 @@
-package com.example.finance_tracker_app
+package com.example.finance_tracker_app.activities
 
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
@@ -8,7 +8,6 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.ui.tooling.preview.PreviewDynamicColors
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.jaredrummler.android.colorpicker.ColorPickerDialog
@@ -19,12 +18,18 @@ import android.util.Log
 import androidx.lifecycle.lifecycleScope
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import com.example.finance_tracker_app.AddOperationActivity
+import com.example.finance_tracker_app.data.db.AppDatabase
+import com.example.finance_tracker_app.data.api.CategoryRequest
+import com.example.finance_tracker_app.data.db.PendingCategory
+import com.example.finance_tracker_app.R
+import com.example.finance_tracker_app.data.api.RetrofitClient
 import okhttp3.ResponseBody
 import retrofit2.Call
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import retrofit2.Callback
+import retrofit2.Response
 
 data class Category(val name: String, val color: Int)
 
@@ -36,7 +41,7 @@ class AddCategoryActivity : AppCompatActivity(), ColorPickerDialogListener {
     private lateinit var colorPreview: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         val isDark = prefs.getBoolean("dark_theme", false)
         val mode = if (isDark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         AppCompatDelegate.setDefaultNightMode(mode)
@@ -105,8 +110,8 @@ class AddCategoryActivity : AppCompatActivity(), ColorPickerDialogListener {
                 color = selectedColor
             )
             RetrofitClient.instance.saveCategory(categoryRequest)
-                .enqueue(object : retrofit2.Callback<ResponseBody> {
-                    override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                .enqueue(object : Callback<ResponseBody> {
+                    override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                         if (response.isSuccessful) {
                             Log.d("AddCategory", "Category synced to backend")
                             lifecycleScope.launch {
@@ -131,14 +136,14 @@ class AddCategoryActivity : AppCompatActivity(), ColorPickerDialogListener {
         CoroutineScope(Dispatchers.IO).launch {
             val gson = Gson()
             val json = gson.toJson(categoryRequest)
-            val db = AppDatabase.getDatabase(this@AddCategoryActivity)
+            val db = AppDatabase.Companion.getDatabase(this@AddCategoryActivity)
             db.pendingCategoryDao().insert(PendingCategory(categoryJson = json))
             Log.d("AddCategory", "Saved category locally for retry")
         }
     }
 
     suspend fun retryPendingCategories(context: Context) {
-        val db = AppDatabase.getDatabase(context)
+        val db = AppDatabase.Companion.getDatabase(context)
         val pendingCategoryDao = db.pendingCategoryDao()
         val gson = Gson()
 
@@ -152,8 +157,8 @@ class AddCategoryActivity : AppCompatActivity(), ColorPickerDialogListener {
             val categoryRequest = gson.fromJson(pending.categoryJson, CategoryRequest::class.java)
 
             RetrofitClient.instance.saveCategory(categoryRequest)
-                .enqueue(object : retrofit2.Callback<ResponseBody> {
-                    override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                .enqueue(object : Callback<ResponseBody> {
+                    override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                         if (response.isSuccessful) {
                             lifecycleScope.launch {
                                 pendingCategoryDao.delete(pending)
@@ -187,7 +192,7 @@ class AddCategoryActivity : AppCompatActivity(), ColorPickerDialogListener {
             sharedPreferences.getString("user_email", null)
         } catch (e: Exception) {
             e.printStackTrace()
-            context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getString("user_email", null)
+            context.getSharedPreferences("app_prefs", MODE_PRIVATE).getString("user_email", null)
         }
     }
 }

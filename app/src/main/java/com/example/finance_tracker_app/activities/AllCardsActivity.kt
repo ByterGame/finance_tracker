@@ -1,40 +1,42 @@
-package com.example.finance_tracker_app
+package com.example.finance_tracker_app.activities
 
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AlphaAnimation
-import android.widget.*
+import android.view.animation.Animation
+import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.example.finance_tracker_app.activities.DashboardActivity
+import com.example.finance_tracker_app.R
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import androidx.appcompat.app.AppCompatDelegate
-import android.content.Context
-import com.example.finance_tracker_app.AddCardActivity.Card
-
-
-
 
 class AllCardsActivity : AppCompatActivity() {
 
 
     private lateinit var sharedPreferences: SharedPreferences
-    private lateinit var cards: MutableList<Card>
+    private lateinit var cards: MutableList<AddCardActivity.Card>
     private lateinit var container: LinearLayout
 
-    private fun saveCards(cards: List<Card>) {
+    private fun saveCards(cards: List<AddCardActivity.Card>) {
         val json = Gson().toJson(cards)
         sharedPreferences.edit().putString("cards_list", json).apply()
     }
 
-    private fun loadCards(): MutableList<Card> {
+    private fun loadCards(): MutableList<AddCardActivity.Card> {
         val cardsJson = sharedPreferences.getString("cards_list", null)
         return if (cardsJson != null) {
-            val type = object : TypeToken<MutableList<Card>>() {}.type
+            val type = object : TypeToken<MutableList<AddCardActivity.Card>>() {}.type
             Gson().fromJson(cardsJson, type)
         } else {
             mutableListOf()
@@ -42,7 +44,7 @@ class AllCardsActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         val isDark = prefs.getBoolean("dark_theme", false)
         val mode = if (isDark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         AppCompatDelegate.setDefaultNightMode(mode)
@@ -146,16 +148,16 @@ class AllCardsActivity : AppCompatActivity() {
             fillAfter = true
         }
 
-        fadeOut.setAnimationListener(object : android.view.animation.Animation.AnimationListener {
-            override fun onAnimationStart(animation: android.view.animation.Animation?) {}
+        fadeOut.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationStart(animation: Animation?) {}
 
-            override fun onAnimationEnd(animation: android.view.animation.Animation?) {
+            override fun onAnimationEnd(animation: Animation?) {
                 cards.removeAt(index)
                 saveCards(cards)
                 refreshCardsUI()
             }
 
-            override fun onAnimationRepeat(animation: android.view.animation.Animation?) {}
+            override fun onAnimationRepeat(animation: Animation?) {}
         })
 
         cardView.startAnimation(fadeOut)

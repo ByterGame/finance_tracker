@@ -1,4 +1,4 @@
-package com.example.finance_tracker_app
+package com.example.finance_tracker_app.activities
 
 import android.content.Intent
 import android.os.Build
@@ -20,14 +20,20 @@ import retrofit2.Response
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import androidx.appcompat.app.AppCompatDelegate
-import android.content.Context
 import com.example.finance_tracker_app.utils.CardStorage
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
-import com.example.finance_tracker_app.AddCardActivity.Card
+import com.example.finance_tracker_app.data.db.AppDatabase
+import com.example.finance_tracker_app.data.db.Operation
+import com.example.finance_tracker_app.R
+import com.example.finance_tracker_app.activities.AddCardActivity.Card
+import com.example.finance_tracker_app.data.api.CodeVerificationRequest
+import com.example.finance_tracker_app.data.api.EmailRequest
+import com.example.finance_tracker_app.data.api.RetrofitClient
+import com.example.finance_tracker_app.data.api.UserDataResponse
 
 
 class Registration : AppCompatActivity() {
@@ -42,7 +48,7 @@ class Registration : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
-        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         val isDark = prefs.getBoolean("dark_theme", false)
         val mode = if (isDark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         AppCompatDelegate.setDefaultNightMode(mode)
@@ -251,7 +257,7 @@ class Registration : AppCompatActivity() {
         })
         prefs.edit().putString("categories_list", json).apply()
 
-        val db = AppDatabase.getDatabase(this)
+        val db = AppDatabase.Companion.getDatabase(this)
         val operationDao = db.operationDao()
         lifecycleScope.launch {
             val operations = data.operations.map {

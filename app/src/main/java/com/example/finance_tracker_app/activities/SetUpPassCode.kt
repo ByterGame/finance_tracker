@@ -1,4 +1,4 @@
-package com.example.finance_tracker_app
+package com.example.finance_tracker_app.activities
 
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -6,17 +6,14 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.example.finance_tracker_app.databinding.SetUpPinCodeLayoutBinding
-import android.security.keystore.KeyGenParameterSpec
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import android.security.keystore.KeyProperties
 import java.io.IOException
 import java.security.GeneralSecurityException
 import androidx.core.content.edit
 import android.content.Intent
 import androidx.appcompat.app.AppCompatDelegate
-import android.content.Context
-
+import com.example.finance_tracker_app.R
 
 
 class SetUpPassCode: AppCompatActivity() {
@@ -25,7 +22,7 @@ class SetUpPassCode: AppCompatActivity() {
     private val enteredPassword = StringBuilder()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         val isDark = prefs.getBoolean("dark_theme", false)
         val mode = if (isDark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         AppCompatDelegate.setDefaultNightMode(mode)

@@ -1,4 +1,4 @@
-package com.example.finance_tracker_app
+package com.example.finance_tracker_app.activities
 
 
 import android.os.Bundle
@@ -18,19 +18,25 @@ import android.widget.TextView
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.example.finance_tracker_app.data.db.AppDatabase
+import com.example.finance_tracker_app.data.api.EmailRequest
+import com.example.finance_tracker_app.R
+import com.example.finance_tracker_app.data.api.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import okhttp3.ResponseBody
 import retrofit2.Call
-
+import retrofit2.Callback
+import retrofit2.Response
 
 
 class SettingsActivity : AppCompatActivity() {
 
-    private val prefs by lazy { getSharedPreferences("settings", Context.MODE_PRIVATE) }
+    private val prefs by lazy { getSharedPreferences("settings", MODE_PRIVATE) }
     private val currencyNameResMap = mapOf(
         "USD" to R.string.currency_usd,
         "EUR" to R.string.currency_eur,
@@ -71,7 +77,7 @@ class SettingsActivity : AppCompatActivity() {
         } else {
             logoutButton.text = "Logout"
             logoutButton.setOnClickListener {
-                val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+                val builder = AlertDialog.Builder(this)
                 builder.setTitle("Confirm Logout")
                 builder.setMessage("Are you sure you want to log out of your current account?")
                 builder.setPositiveButton("Yes") { dialog, _ ->
@@ -89,11 +95,11 @@ class SettingsActivity : AppCompatActivity() {
                     )
 
                     for (name in prefsList) {
-                        getSharedPreferences(name, Context.MODE_PRIVATE).edit() { clear() }
+                        getSharedPreferences(name, MODE_PRIVATE).edit() { clear() }
                     }
 
                     lifecycleScope.launch {
-                        val db = AppDatabase.getDatabase(this@SettingsActivity)
+                        val db = AppDatabase.Companion.getDatabase(this@SettingsActivity)
                         db.operationDao().deleteAllOperations()
                         Toast.makeText(
                             this@SettingsActivity,
@@ -115,7 +121,7 @@ class SettingsActivity : AppCompatActivity() {
         val clearDataButton = findViewById<Button>(R.id.clear_data_button)
 
         clearDataButton.setOnClickListener {
-            val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+            val builder = AlertDialog.Builder(this)
             builder.setTitle("Confirm Deletion")
             builder.setMessage("Are you sure you want to delete all data without the possibility of recovery?")
             builder.setPositiveButton("Yes") { dialog, _ ->
@@ -124,8 +130,8 @@ class SettingsActivity : AppCompatActivity() {
                 lifecycleScope.launch {
                     userEmail?.let {
                         val call = RetrofitClient.instance.deleteUserData(EmailRequest(it))
-                        call.enqueue(object : retrofit2.Callback<ResponseBody> {
-                            override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                        call.enqueue(object : Callback<ResponseBody> {
+                            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                                 if (response.isSuccessful) {
                                     Toast.makeText(this@SettingsActivity, "Server data cleared successfully", Toast.LENGTH_SHORT).show()
                                     val prefsList = listOf(
@@ -141,11 +147,11 @@ class SettingsActivity : AppCompatActivity() {
                                     )
 
                                     for (name in prefsList) {
-                                        getSharedPreferences(name, Context.MODE_PRIVATE).edit() { clear() }
+                                        getSharedPreferences(name, MODE_PRIVATE).edit() { clear() }
                                     }
 
 
-                                    val db = AppDatabase.getDatabase(this@SettingsActivity)
+                                    val db = AppDatabase.Companion.getDatabase(this@SettingsActivity)
                                     CoroutineScope(Dispatchers.IO).launch {
                                         db.operationDao().deleteAllOperations()
                                     }
@@ -192,7 +198,7 @@ class SettingsActivity : AppCompatActivity() {
             sharedPreferences.getString("user_email", null)
         } catch (e: Exception) {
             e.printStackTrace()
-            context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getString("user_email", null)
+            context.getSharedPreferences("app_prefs", MODE_PRIVATE).getString("user_email", null)
         }
     }
 

@@ -1,47 +1,63 @@
-package com.example.finance_tracker_app
+package com.example.finance_tracker_app.activities
 
 import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.Typeface
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.view.Gravity
-import android.widget.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.Spinner
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.github.mikephil.charting.charts.LineChart
-import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.data.*
-import com.github.mikephil.charting.formatter.ValueFormatter
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.example.finance_tracker_app.data.db.AppDatabase
+import com.example.finance_tracker_app.data.api.ErApiResponse
+import com.example.finance_tracker_app.data.api.ExchangeRateClient
+import com.example.finance_tracker_app.data.api.ExchangeRatesManager
+import com.example.finance_tracker_app.data.db.Operation
+import com.example.finance_tracker_app.data.db.OperationDao
+import com.example.finance_tracker_app.R
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.Legend
+import com.github.mikephil.charting.components.MarkerView
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.highlight.Highlight
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
+import com.github.mikephil.charting.utils.MPPointF
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.*
-import android.graphics.Typeface
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.core.content.ContextCompat
-import com.github.mikephil.charting.components.Legend
-import com.github.mikephil.charting.components.MarkerView
-import com.github.mikephil.charting.highlight.Highlight
-import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
-import com.github.mikephil.charting.utils.MPPointF
-import androidx.appcompat.app.AppCompatDelegate
-import com.example.finance_tracker_app.AddCardActivity.Card
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-
-
-
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import kotlin.collections.get
 
 class DashboardActivity : AppCompatActivity() {
 
@@ -66,11 +82,11 @@ class DashboardActivity : AppCompatActivity() {
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         val isDark = prefs.getBoolean("dark_theme", false)
         val mode = if (isDark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         AppCompatDelegate.setDefaultNightMode(mode)
-        mainCurrency = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        mainCurrency = getSharedPreferences("settings", MODE_PRIVATE)
             .getString("main_currency", "USD") ?: "USD"
         ExchangeRatesManager.loadFromPrefs(this)
 
@@ -78,7 +94,8 @@ class DashboardActivity : AppCompatActivity() {
 
         if (hasInternet) {
             if (ExchangeRatesManager.isUpdateNeeded()) {
-                ExchangeRateClient.api.getRates(mainCurrency).enqueue(object : Callback<ErApiResponse> {
+                ExchangeRateClient.api.getRates(mainCurrency).enqueue(object :
+                    Callback<ErApiResponse> {
                     override fun onResponse(call: Call<ErApiResponse>, response: Response<ErApiResponse>) {
                         val data = response.body()
                         if (data != null && data.result == "success" && data.rates != null) {
@@ -120,7 +137,7 @@ class DashboardActivity : AppCompatActivity() {
         defaultCal.set(2025, Calendar.JUNE, 1, 23, 59, 59)
         val defaultEndDate = defaultCal.timeInMillis
 
-        val prefs_dash = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val prefs_dash = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         startDateMillis = prefs_dash.getLong(KEY_START_DATE, defaultStartDate)
         endDateMillis = prefs_dash.getLong(KEY_END_DATE, defaultEndDate)
         val savedGraphPos = prefs_dash.getInt(KEY_GRAPH_TYPE_POS, 4)
@@ -134,7 +151,7 @@ class DashboardActivity : AppCompatActivity() {
         typeGraphSpinner.setSelection(savedGraphPos)
         initChartConfig()
 
-        operationDao = AppDatabase.getDatabase(this).operationDao()
+        operationDao = AppDatabase.Companion.getDatabase(this).operationDao()
         lifecycleScope.launch {
             allOperations = operationDao.getAllOperations()
             withContext(Dispatchers.Main) {
@@ -154,7 +171,7 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     fun checkInternetConnection(): Boolean {
-        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
@@ -284,11 +301,23 @@ class DashboardActivity : AppCompatActivity() {
         }
         startDateInput.setOnClickListener {
             cal.time = Date()
-            DatePickerDialog(this, onStart, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+            DatePickerDialog(
+                this,
+                onStart,
+                cal.get(Calendar.YEAR),
+                cal.get(Calendar.MONTH),
+                cal.get(Calendar.DAY_OF_MONTH)
+            ).show()
         }
         endDateInput.setOnClickListener {
             cal.time = Date()
-            DatePickerDialog(this, onEnd, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+            DatePickerDialog(
+                this,
+                onEnd,
+                cal.get(Calendar.YEAR),
+                cal.get(Calendar.MONTH),
+                cal.get(Calendar.DAY_OF_MONTH)
+            ).show()
         }
     }
 
@@ -322,7 +351,7 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun savePrefs(selectedSpinnerPos: Int? = null) {
-        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         with(prefs.edit()) {
             putLong(KEY_START_DATE, startDateMillis)
             putLong(KEY_END_DATE, endDateMillis)
@@ -377,7 +406,8 @@ class DashboardActivity : AppCompatActivity() {
         val byDate = ops.groupBy {
             val c = Calendar.getInstance()
             c.timeInMillis = it.date
-            c.set(Calendar.HOUR_OF_DAY, 0); c.set(Calendar.MINUTE, 0); c.set(Calendar.SECOND, 0); c.set(Calendar.MILLISECOND, 0)
+            c.set(Calendar.HOUR_OF_DAY, 0); c.set(Calendar.MINUTE, 0); c.set(Calendar.SECOND, 0); c.set(
+            Calendar.MILLISECOND, 0)
             c.timeInMillis
         }
 
@@ -488,18 +518,17 @@ class DashboardActivity : AppCompatActivity() {
     }
 
 
-    private fun loadCards(): List<Card> {
+    private fun loadCards(): List<AddCardActivity.Card> {
         return try {
             val key = MasterKey.Builder(this).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
             val prefs = EncryptedSharedPreferences.create(this, "cards_secure_prefs",
                 key, EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM)
             prefs.getString("cards_list", null)?.let {
-                Gson().fromJson(it, object: TypeToken<List<Card>>(){}.type)
+                Gson().fromJson(it, object: TypeToken<List<AddCardActivity.Card>>(){}.type)
             } ?: emptyList()
         } catch(e: Exception) { emptyList() }
     }
 
     enum class GraphType { INCOME, EXPENSE, NET, ALL }
 }
-

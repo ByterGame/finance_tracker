@@ -1,34 +1,47 @@
-package com.example.finance_tracker_app
+package com.example.finance_tracker_app.activities
 
 import android.app.DatePickerDialog
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.Spinner
+import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.example.finance_tracker_app.data.db.AppDatabase
+import com.example.finance_tracker_app.data.db.Operation
+import com.example.finance_tracker_app.data.db.OperationDao
+import com.example.finance_tracker_app.data.api.OperationRequest
+import com.example.finance_tracker_app.data.db.PendingOperation
+import com.example.finance_tracker_app.R
+import com.example.finance_tracker_app.data.api.RetrofitClient
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import androidx.appcompat.app.AlertDialog
-import java.util.*
-import androidx.appcompat.app.AppCompatDelegate
-import android.content.Context
-import android.util.Log
-import com.example.finance_tracker_app.AddCardActivity.Card
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-
+import java.util.Calendar
+import kotlin.collections.get
 
 class AddOperationActivity : AppCompatActivity() {
 
@@ -41,12 +54,12 @@ class AddOperationActivity : AppCompatActivity() {
     private lateinit var currencySymbolView: TextView
 
     private val gson = Gson()
-    private var cardsList: List<Card> = emptyList()
+    private var cardsList: List<AddCardActivity.Card> = emptyList()
     private var userCategories: MutableList<String> = mutableListOf()
     private lateinit var db: AppDatabase
     private lateinit var operationDao: OperationDao
     private val pendingOperationDao by lazy {
-        AppDatabase.getDatabase(this).pendingOperationDao()
+        AppDatabase.Companion.getDatabase(this).pendingOperationDao()
     }
 
     private var selectedDateMillis: Long = System.currentTimeMillis()
@@ -65,7 +78,7 @@ class AddOperationActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("settings", MODE_PRIVATE)
         val isDark = prefs.getBoolean("dark_theme", false)
         val mode = if (isDark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
         AppCompatDelegate.setDefaultNightMode(mode)
@@ -81,7 +94,7 @@ class AddOperationActivity : AppCompatActivity() {
         currencySymbolView = findViewById(R.id.currency)
 
 
-        db = AppDatabase.getDatabase(this)
+        db = AppDatabase.Companion.getDatabase(this)
         operationDao = db.operationDao()
 
 
@@ -160,8 +173,8 @@ class AddOperationActivity : AppCompatActivity() {
                         note = if (note.isBlank()) null else note
                     )
                     RetrofitClient.instance.saveOperation(operationRequest)
-                        .enqueue(object : retrofit2.Callback<ResponseBody> {
-                            override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                        .enqueue(object : Callback<ResponseBody> {
+                            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                                 if (response.isSuccessful) {
                                     Log.d("AddOperation", "Operation synced to backend")
                                     lifecycleScope.launch {
@@ -192,7 +205,12 @@ class AddOperationActivity : AppCompatActivity() {
                         })
                     runOnUiThread {
                         Toast.makeText(this@AddOperationActivity, "Operation saved", Toast.LENGTH_SHORT).show()
-                        startActivity(Intent(this@AddOperationActivity, DashboardActivity::class.java))
+                        startActivity(
+                            Intent(
+                                this@AddOperationActivity,
+                                DashboardActivity::class.java
+                            )
+                        )
                         finish()
                     }
                 } catch (e: Exception) {
@@ -217,7 +235,7 @@ class AddOperationActivity : AppCompatActivity() {
     }
 
     suspend fun retryPendingOperations(context: Context) {
-        val dao = AppDatabase.getDatabase(context).pendingOperationDao()
+        val dao = AppDatabase.Companion.getDatabase(context).pendingOperationDao()
         val list = dao.getAll()
 
         if (list.isEmpty()) {
@@ -267,11 +285,11 @@ class AddOperationActivity : AppCompatActivity() {
             sharedPreferences.getString("user_email", null)
         } catch (e: Exception) {
             e.printStackTrace()
-            context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE).getString("user_email", null)
+            context.getSharedPreferences("app_prefs", MODE_PRIVATE).getString("user_email", null)
         }
     }
 
-    private fun saveCards(cards: List<Card>) {
+    private fun saveCards(cards: List<AddCardActivity.Card>) {
         val json = gson.toJson(cards)
         getEncryptedPrefs().edit().putString("cards_list", json).apply()
     }
@@ -440,10 +458,10 @@ class AddOperationActivity : AppCompatActivity() {
         )
     }
 
-    private fun loadSavedCards(): List<Card> {
+    private fun loadSavedCards(): List<AddCardActivity.Card> {
         val json = getEncryptedPrefs().getString("cards_list", null)
         return if (json != null) {
-            gson.fromJson(json, object : TypeToken<List<Card>>() {}.type)
+            gson.fromJson(json, object : TypeToken<List<AddCardActivity.Card>>() {}.type)
         } else {
             emptyList()
         }

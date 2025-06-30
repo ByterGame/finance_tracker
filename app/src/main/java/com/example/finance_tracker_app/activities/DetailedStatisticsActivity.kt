@@ -1,36 +1,39 @@
-package com.example.finance_tracker_app
+package com.example.finance_tracker_app.activities
 
 import android.content.Intent
-import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.github.mikephil.charting.charts.PieChart
-import com.github.mikephil.charting.data.PieData
-import com.github.mikephil.charting.data.PieDataSet
-import com.github.mikephil.charting.data.PieEntry
 import android.graphics.Color
+import android.os.Bundle
 import android.os.Environment
-import android.util.Log
-import android.widget.EditText
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.lifecycleScope
-import com.github.mikephil.charting.components.Legend
+import com.example.finance_tracker_app.data.db.AppDatabase
+import com.example.finance_tracker_app.data.api.ExchangeRatesManager
+import com.example.finance_tracker_app.data.db.Operation
+import com.example.finance_tracker_app.data.db.OperationDao
+import com.example.finance_tracker_app.R
 import com.example.finance_tracker_app.databinding.DetailedStatisticsLayoutBinding
 import com.example.finance_tracker_app.utils.CardStorage
+import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.components.Legend
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.launch
-import okhttp3.internal.cache.DiskLruCache
 import java.io.File
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import com.example.finance_tracker_app.AddCardActivity.Card
-
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 class DetailedStatisticsActivity : AppCompatActivity() {
 
@@ -52,7 +55,7 @@ class DetailedStatisticsActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("user_categories", MODE_PRIVATE)
         val json = prefs.getString("categories_list", null)
         return if (json != null) {
-            val type = object : com.google.gson.reflect.TypeToken<List<Category>>() {}.type
+            val type = object : TypeToken<List<Category>>() {}.type
             Gson().fromJson(json, type)
         } else {
             emptyList()
@@ -65,11 +68,11 @@ class DetailedStatisticsActivity : AppCompatActivity() {
         binding = DetailedStatisticsLayoutBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        db = AppDatabase.getDatabase(this)
+        db = AppDatabase.Companion.getDatabase(this)
         operationDao = db.operationDao()
 
-        val watcher = object : android.text.TextWatcher {
-            override fun afterTextChanged(s: android.text.Editable?) {
+        val watcher = object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
                 updateStatistics()
             }
 
@@ -121,7 +124,7 @@ class DetailedStatisticsActivity : AppCompatActivity() {
 
     private fun buildCSVContent(
         operations: List<Operation>,
-        cards: List<Card>,
+        cards: List<AddCardActivity.Card>,
         fromDate: LocalDateTime,
         toDate: LocalDateTime
     ): String {
@@ -132,9 +135,9 @@ class DetailedStatisticsActivity : AppCompatActivity() {
 
         sb.append("Operations\n")
         sb.append("Date,Type,Category,Amount\n")
-        val dateFormatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         for (op in operations) {
-            val opDate = java.time.Instant.ofEpochMilli(op.date).atZone(ZoneId.systemDefault()).toLocalDate()
+            val opDate = Instant.ofEpochMilli(op.date).atZone(ZoneId.systemDefault()).toLocalDate()
             sb.append("${opDate.format(dateFormatter)},${op.type},${op.category},${op.amount}\n")
         }
         sb.append("\n")
@@ -145,7 +148,7 @@ class DetailedStatisticsActivity : AppCompatActivity() {
         val totalIncome = incomeOps.sumOf { it.amount }
         val totalExpense = expenseOps.sumOf { it.amount }
 
-        val monthsBetween = java.time.temporal.ChronoUnit.MONTHS.between(fromDate, toDate).coerceAtLeast(1)
+        val monthsBetween = ChronoUnit.MONTHS.between(fromDate, toDate).coerceAtLeast(1)
         val avgIncomePerMonth = totalIncome / monthsBetween
         val avgExpensePerMonth = totalExpense / monthsBetween
 

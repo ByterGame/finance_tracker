@@ -1,7 +1,8 @@
-package com.example.finance_tracker_app
+package com.example.finance_tracker_app.data.api
 
 import android.content.Context
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 object ExchangeRatesManager {
     private const val PREFS_NAME = "exchange_rates_prefs"
@@ -33,7 +34,7 @@ object ExchangeRatesManager {
         nextUpdateUnix = prefs.getLong(KEY_NEXT_UPDATE, 0)
 
         ratesMap = if (json != null) {
-            Gson().fromJson(json, object : com.google.gson.reflect.TypeToken<Map<String, Double>>() {}.type)
+            Gson().fromJson(json, object : TypeToken<Map<String, Double>>() {}.type)
         } else {
             defaultRates
         }

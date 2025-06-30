@@ -1,4 +1,4 @@
-package com.example.finance_tracker_app
+package com.example.finance_tracker_app.data.api
 
 import com.google.gson.annotations.SerializedName
 import retrofit2.Call

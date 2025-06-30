@@ -1,6 +1,5 @@
-package com.example.finance_tracker_app
+package com.example.finance_tracker_app.data.api
 
-import android.R
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.POST

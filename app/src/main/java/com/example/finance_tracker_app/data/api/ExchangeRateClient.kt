@@ -1,4 +1,4 @@
-package com.example.finance_tracker_app
+package com.example.finance_tracker_app.data.api
 
 import com.google.gson.GsonBuilder
 import retrofit2.Retrofit
